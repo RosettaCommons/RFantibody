@@ -2,22 +2,22 @@ import numpy as np
 import os
 import sys
 from omegaconf import DictConfig
-from kinematics import xyz_to_t2d
+from rfantibody.rfdiffusion.kinematics import xyz_to_t2d
 import torch
 import torch.nn.functional as nn
-from util import get_torsions
-from diffusion import get_beta_schedule, get_aa_schedule, get_chi_betaT
-from diff_util import get_aa_schedule, th_interpolate_angles, th_min_angle, th_interpolate_angle_single
+from rfantibody.rfdiffusion.util import get_torsions
+from rfantibody.rfdiffusion.diffusion import get_beta_schedule, get_aa_schedule, get_chi_betaT
+from rfantibody.rfdiffusion.diff_util import get_aa_schedule, th_interpolate_angles, th_min_angle, th_interpolate_angle_single
 from icecream import ic
 from scipy.spatial.transform import Rotation as scipy_R
 from scipy.spatial.transform import Slerp
-from util import torsion_indices as TOR_INDICES
-from util import torsion_can_flip as TOR_CAN_FLIP
-from util import reference_angles as REF_ANGLES
-from util import rigid_from_3_points
-from util_module import ComputeAllAtomCoords
-from potentials.manager import PotentialManager
-import util
+from rfantibody.rfdiffusion.util import torsion_indices as TOR_INDICES
+from rfantibody.rfdiffusion.util import torsion_can_flip as TOR_CAN_FLIP
+from rfantibody.rfdiffusion.util import reference_angles as REF_ANGLES
+from rfantibody.rfdiffusion.util import rigid_from_3_points
+from rfantibody.rfdiffusion.util_module import ComputeAllAtomCoords
+from rfantibody.rfdiffusion.potentials.manager import PotentialManager
+from rfantibody.rfdiffusion import util
 import random
 import logging
 import string 
