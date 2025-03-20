@@ -1,18 +1,14 @@
+import gzip
 import os
+import random
 import re
+import string
 
 import numpy as np
-
-import string
-import os,re
-import random
-import util
-import gzip
-
 import pandas as pd
 
-from rfantibody.rfdiffusion.chemical import aa2num, aa2long
-
+import rfantibody.rfdiffusion.util as util
+from rfantibody.rfdiffusion.chemical import aa2long, aa2num
 
 to1letter = {
     "ALA":'A', "ARG":'R', "ASN":'N', "ASP":'D', "CYS":'C',
@@ -98,12 +94,12 @@ def parse_pdb(filename, xyz27=False,seq=False):
     return parse_pdb_lines(lines, xyz27, seq)
 
 #'''
-def parse_pdb_lines(lines, xyz27, seq, get_aa=util.aa2num.get):
+def parse_pdb_lines(lines, xyz27, seq, get_aa=aa2num.get):
 
     # indices of residues observed in the structure
     idx_s = [int(l[22:26]) for l in lines if l[:4]=="ATOM" and l[12:16].strip()=="CA"]
     res = [(l[22:26],l[17:20]) for l in lines if l[:4]=="ATOM" and l[12:16].strip()=="CA"]
-    seq = [util.aa2num[r[1]] if r[1] in util.aa2num.keys() else 20 for r in res]
+    seq = [aa2num[r[1]] if r[1] in aa2num.keys() else 20 for r in res]
     # 4 BB + up to 10 SC atoms
     if xyz27:
         xyz = np.full((len(idx_s), 27, 3), np.nan, dtype=np.float32)
@@ -114,7 +110,7 @@ def parse_pdb_lines(lines, xyz27, seq, get_aa=util.aa2num.get):
             continue
         resNo, atom, aa = int(l[22:26]), l[12:16], l[17:20]
         idx = idx_s.index(resNo)
-        for i_atm, tgtatm in enumerate(util.aa2long[get_aa(aa)]):
+        for i_atm, tgtatm in enumerate(aa2long[get_aa(aa)]):
             if tgtatm and tgtatm.strip() == atom.strip():
                 xyz[idx,i_atm,:] = [float(l[30:38]), float(l[38:46]), float(l[46:54])]
                 break
@@ -126,36 +122,6 @@ def parse_pdb_lines(lines, xyz27, seq, get_aa=util.aa2num.get):
         return xyz,mask,np.array(idx_s)
     else:
         return xyz,mask,np.array(idx_s),np.array(seq)
-
-#'''
-
-'''
-def parse_pdb_lines(lines):
-
-    # indices of residues observed in the structure
-    #idx_s = [int(l[22:26]) for l in lines if l[:4]=="ATOM" and l[12:16].strip()=="CA"]
-    res = [(l[22:26],l[17:20]) for l in lines if l[:4]=="ATOM" and l[12:16].strip()=="CA"]
-    idx_s = [int(r[0]) for r in res]
-    seq = [util.aa2num[r[1]] if r[1] in util.aa2num.keys() else 20 for r in res]
-
-    # 4 BB + up to 10 SC atoms
-    xyz = np.full((len(idx_s), 14, 3), np.nan, dtype=np.float32)
-    for l in lines:
-        if l[:4] != "ATOM":
-            continue
-        resNo, atom, aa = int(l[22:26]), l[12:16], l[17:20]
-        idx = idx_s.index(resNo)
-        for i_atm, tgtatm in enumerate(util.aa2long[util.aa2num[aa]]):
-            if tgtatm == atom:
-                xyz[idx,i_atm,:] = [float(l[30:38]), float(l[38:46]), float(l[46:54])]
-                break
-
-    # save atom mask
-    mask = np.logical_not(np.isnan(xyz[...,0]))
-    xyz[np.isnan(xyz[...,0])] = 0.0
-
-    return xyz,mask,np.array(idx_s), np.array(seq)
-'''
 
 
 def parse_templates(item, params):
@@ -429,7 +395,7 @@ def parse_HLT_remarked(pdb_path, preserve_pdb_numbering=False):
 def parse_HLT_lines(lines, preserve_pdb_numbering=False):
     # indices of residues observed in the structure
     res = [(l[22:26],l[17:20]) for l in lines if l[:4]=="ATOM" and l[12:16].strip()=="CA"]
-    seq = [util.aa2num[r[1]] if r[1] in util.aa2num.keys() else 20 for r in res]
+    seq = [aa2num[r[1]] if r[1] in aa2num.keys() else 20 for r in res]
     pdb_idx = [( l[21:22].strip(), int(l[22:26].strip()) ) for l in lines if l[:4]=="ATOM" and l[12:16].strip()=="CA"]  # chain letter, res num
 
     # 4 BB + up to 10 SC atoms
@@ -439,7 +405,7 @@ def parse_HLT_lines(lines, preserve_pdb_numbering=False):
         if l[:4] == "ATOM":
             chain, resNo, atom, aa = l[21:22], int(l[22:26]), ' '+l[12:16].strip().ljust(3), l[17:20]
             idx = pdb_idx.index((chain,resNo))
-            for i_atm, tgtatm in enumerate(util.aa2long[util.aa2num[aa]]):
+            for i_atm, tgtatm in enumerate(aa2long[aa2num[aa]]):
                 if tgtatm is not None and tgtatm.strip() == atom.strip(): # ignore whitespace
                     xyz[idx,i_atm,:] = [float(l[30:38]), float(l[38:46]), float(l[46:54])]
                     break

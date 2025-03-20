@@ -1,7 +1,7 @@
 import torch
 
 from rfantibody.rf2.modules.util import Dotdict
-from rfantibody.rf2.network.chemical import aa2long, aa2num, INIT_CRDS
+from rfantibody.rf2.network.chemical import INIT_CRDS, aa2long, aa2num
 
 split_remark = lambda line: (line.split()[3][0], int(line.split()[2]))
 

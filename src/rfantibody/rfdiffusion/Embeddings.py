@@ -1,12 +1,21 @@
+import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
-import math
 
-from rfantibody.rfdiffusion.util_module import create_custom_forward, rbf, init_lecun_normal
-from rfantibody.rfdiffusion.Attention_module import Attention, FeedForwardLayer, AttentionWithBias
+from rfantibody.rfdiffusion.Attention_module import (
+    Attention,
+    AttentionWithBias,
+    FeedForwardLayer,
+)
 from rfantibody.rfdiffusion.Track_module import PairStr2Pair
+from rfantibody.rfdiffusion.util_module import (
+    create_custom_forward,
+    init_lecun_normal,
+    rbf,
+)
 
 # Module contains classes and functions to generate initial embeddings
 

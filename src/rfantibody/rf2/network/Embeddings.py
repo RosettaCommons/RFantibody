@@ -2,10 +2,14 @@ import torch
 import torch.nn as nn
 import torch.utils.checkpoint as checkpoint
 
-from rfantibody.rf2.network.util import get_Cb
-from rfantibody.rf2.network.util_module import create_custom_forward, rbf, init_lecun_normal
 from rfantibody.rf2.network.Attention_module import Attention
 from rfantibody.rf2.network.Track_module import PairStr2Pair
+from rfantibody.rf2.network.util import get_Cb
+from rfantibody.rf2.network.util_module import (
+    create_custom_forward,
+    init_lecun_normal,
+    rbf,
+)
 
 
 # Module contains classes and functions to generate initial embeddings

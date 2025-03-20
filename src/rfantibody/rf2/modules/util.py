@@ -1,14 +1,16 @@
 from __future__ import annotations
-import os
-import glob
-import functools
 
-import torch
+import functools
+import glob
+import os
+
 import numpy as np
+import torch
 
 import rfantibody.rf2.network.util as RF2_util
-from rfantibody.rf2.network.chemical import aa2long, num2aa, INIT_CRDS
+from rfantibody.rf2.network.chemical import INIT_CRDS, aa2long, num2aa
 from rfantibody.util.quiver import Quiver
+
 
 def get_pdblines(pose: "Pose", Bfacts=None) -> list:
     """

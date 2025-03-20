@@ -1,6 +1,6 @@
 #!/bin/bash
 
-poetry run python  /home/src/rfantibody/scripts/rfdiffusion_inference.py \
+poetry run python  /home/scripts/rfdiffusion_inference.py \
     --config-name antibody \
     antibody.target_pdb=/home/scripts/examples/example_inputs/rsv_site3.pdb \
     antibody.framework_pdb=/home/scripts/examples/example_inputs/h-NbBCII10.pdb \

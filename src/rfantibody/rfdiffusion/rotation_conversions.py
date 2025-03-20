@@ -9,7 +9,6 @@ from typing import Optional
 import torch
 import torch.nn.functional as F
 
-
 """
 The transformation matrices returned from the functions in this file assume
 the points on which the transformation will be applied are column vectors.

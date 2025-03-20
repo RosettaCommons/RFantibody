@@ -1,10 +1,10 @@
-import torch
-
-import numpy as np
-
 from typing import List, Optional
 
+import numpy as np
+import torch
+
 from rfantibody.rfdiffusion.chemical import aa2long, aa2num
+
 
 def stamp_pdbline(
     prefix: str,

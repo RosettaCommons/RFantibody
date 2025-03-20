@@ -1,9 +1,10 @@
+import glob
 import os
 import uuid
-import glob
 
-from rfantibody.util.quiver import Quiver
 from rfantibody.util.pose import Pose
+from rfantibody.util.quiver import Quiver
+
 
 class StructManager():
     '''

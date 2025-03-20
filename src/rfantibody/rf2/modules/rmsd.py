@@ -1,13 +1,14 @@
 from __future__ import annotations
-import os
-import uuid
+
 import glob
+import os
 import subprocess
+import uuid
 
 import torch
 
-from rfantibody.rf2.modules import pose_util as pu
 from rfantibody.rf2.modules import parsers
+from rfantibody.rf2.modules import pose_util as pu
 
 script_dir=os.path.dirname(os.path.abspath(__file__))
 usalign = f'{script_dir}/../../../../include/USalign/USalign'

@@ -1,15 +1,16 @@
 from __future__ import annotations
-import os
-from dataclasses import dataclass, field
-from collections import OrderedDict
+
 import glob
+import os
+from collections import OrderedDict
+from dataclasses import dataclass, field
 
 import torch
 import torch.nn.functional as F
 
-from rfantibody.rf2.modules import parsers
-from rfantibody.rf2.modules import util
+from rfantibody.rf2.modules import parsers, util
 from rfantibody.rf2.modules.util import Dotdict
+
 
 @dataclass
 class Pose:

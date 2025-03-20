@@ -1,11 +1,12 @@
 """Helper class for handle symmetric assemblies."""
+import functools as fn
+import logging
+import string
+
+import numpy as np
+import torch
 from pyrsistent import v
 from scipy.spatial.transform import Rotation
-import functools as fn
-import torch
-import string
-import logging
-import numpy as np
 
 format_rots = lambda r: torch.tensor(r).float()
 

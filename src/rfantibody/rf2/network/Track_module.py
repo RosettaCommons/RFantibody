@@ -1,13 +1,13 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch import einsum
 import torch.utils.checkpoint as checkpoint
+from torch import einsum
 
-from rfantibody.rf2.network.util_module import *
 from rfantibody.rf2.network.Attention_module import *
+from rfantibody.rf2.network.kinematics import Qs2Rs, normQ
 from rfantibody.rf2.network.SE3_network import SE3TransformerWrapper
-from rfantibody.rf2.network.kinematics import normQ, Qs2Rs
+from rfantibody.rf2.network.util_module import *
 
 # Components for three-track blocks
 # 1. MSA -> MSA update (biased attention. bias from pair & structure)

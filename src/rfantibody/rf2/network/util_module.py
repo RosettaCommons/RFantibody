@@ -1,11 +1,12 @@
+import copy
+
+import dgl
+import numpy as np
 import torch
 import torch.nn as nn
-import numpy as np
-
-import copy
-import dgl
 
 from rfantibody.rf2.network.util import *
+
 
 def init_lecun_normal(module, scale=1.0):
     def truncated_normal(uniform, mu=0.0, sigma=1.0, a=-2, b=2):

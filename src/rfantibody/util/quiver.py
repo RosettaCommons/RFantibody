@@ -7,8 +7,9 @@
     Later this can be made more sophisticated by using a proper database, but for now this will be the simplest implementation.
 '''
 
-import sys
 import os
+import sys
+
 
 class Quiver():
     def __init__(self, filename, mode, backend='txt'):

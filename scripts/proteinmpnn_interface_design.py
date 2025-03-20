@@ -1,15 +1,13 @@
+import argparse
 import os
 import sys
-import time
-import argparse
 import time
 
 import torch
 
 import rfantibody.proteinmpnn.util_protein_mpnn as mpnn_util
-from rfantibody.proteinmpnn.struct_manager import StructManager
 from rfantibody.proteinmpnn.sample_features import SampleFeatures
-
+from rfantibody.proteinmpnn.struct_manager import StructManager
 
 #################################
 # Parse Arguments

@@ -9,11 +9,10 @@ HLT format requirements:
 """
 
 import argparse
-import numpy as np
 
+import numpy as np
+from biotite.structure import array, residue_iter
 from biotite.structure.io.pdb import PDBFile
-from biotite.structure import array
-from biotite.structure import residue_iter
 
 protein_residues = [
     "ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY", 

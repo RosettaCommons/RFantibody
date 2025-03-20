@@ -1,11 +1,11 @@
+import numpy as np
 import torch
 import torch.nn as nn
-import numpy as np
-from torch import einsum
 from chemical import aa2num
-from util import rigid_from_3_points
 from kinematics import get_dih
 from scoring import HbHybType
+from torch import einsum
+from util import rigid_from_3_points
 
 # Loss functions for the training
 # 1. BB rmsd loss

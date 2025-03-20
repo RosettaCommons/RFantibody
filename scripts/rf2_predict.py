@@ -1,12 +1,12 @@
-import torch
-
 import hydra
+import torch
 from hydra.core.hydra_config import HydraConfig
 
-import rfantibody.rf2.modules.util as util
 import rfantibody.rf2.modules.pose_util as pu
+import rfantibody.rf2.modules.util as util
 from rfantibody.rf2.modules.model_runner import AbPredictor
-from rfantibody.rf2.modules.preprocess import pose_to_inference_RFinput, Preprocess
+from rfantibody.rf2.modules.preprocess import Preprocess, pose_to_inference_RFinput
+
 
 @hydra.main(version_base=None, config_path='/home/src/rfantibody/rf2/config', config_name='base')
 def main(conf: HydraConfig) -> None:

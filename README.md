@@ -142,7 +142,7 @@ The first step in RFantibody is to generate antibody-target docks using an antib
 ```
 # From inside of the rfantibody container
 
-poetry run python  /home/src/rfantibody/scripts/rfdiffusion_inference.py \
+poetry run python  /home/scripts/rfdiffusion_inference.py \
     --config-name antibody \
     antibody.target_pdb=/home/scripts/examples/example_inputs/rsv_site3.pdb \
     antibody.framework_pdb=/home/scripts/examples/example_inputs/hu-4D5-8_Fv.pdb \

@@ -8,8 +8,8 @@ Created on Apr 30, 2014
 '''
 
 
-import sys
 import mmap
+import sys
 from collections import namedtuple
 
 FFindexEntry = namedtuple("FFindexEntry", "name, offset, length")

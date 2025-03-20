@@ -1,24 +1,25 @@
-import sys
 import os
+import sys
 import time
-from collections import namedtuple
-
-import torch
-import torch.nn as nn
-import numpy as np
-
-from rfantibody.rf2.network.parsers import parse_a3m, read_templates, read_template_pdb
-from rfantibody.rf2.network.RoseTTAFoldModel  import RoseTTAFoldModule
-from rfantibody.rf2.network import util
-from rfantibody.rf2.network.ffindex import *
-from rfantibody.rf2.network.featurizing import MSAFeaturize
-from rfantibody.rf2.network.kinematics import xyz_to_t2d
-from rfantibody.rf2.network.chemical import INIT_CRDS
-from rfantibody.rf2.network.util_module import XYZConverter
-from rfantibody.rf2.network.symmetry import symm_subunit_matrix, find_symm_subs
 
 # suppress dgl warning w/ newest pytorch
 import warnings
+from collections import namedtuple
+
+import numpy as np
+import torch
+import torch.nn as nn
+
+from rfantibody.rf2.network import util
+from rfantibody.rf2.network.chemical import INIT_CRDS
+from rfantibody.rf2.network.featurizing import MSAFeaturize
+from rfantibody.rf2.network.ffindex import *
+from rfantibody.rf2.network.kinematics import xyz_to_t2d
+from rfantibody.rf2.network.parsers import parse_a3m, read_template_pdb, read_templates
+from rfantibody.rf2.network.RoseTTAFoldModel import RoseTTAFoldModule
+from rfantibody.rf2.network.symmetry import find_symm_subs, symm_subunit_matrix
+from rfantibody.rf2.network.util_module import XYZConverter
+
 warnings.filterwarnings("ignore", category=UserWarning)
 
 def get_args():

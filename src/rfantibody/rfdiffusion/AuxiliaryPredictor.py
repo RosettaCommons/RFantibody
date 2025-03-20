@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+
 class DistanceNetwork(nn.Module):
     def __init__(self, n_feat, p_drop=0.1):
         super(DistanceNetwork, self).__init__()

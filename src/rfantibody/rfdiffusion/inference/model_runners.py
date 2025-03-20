@@ -1,31 +1,30 @@
+import logging
 import os
-import torch
-import torch.nn.functional as nn
 
 import numpy as np
-
-from omegaconf import DictConfig, OmegaConf
-from icecream import ic
-import logging
+import torch
+import torch.nn.functional as nn
 from hydra.core.hydra_config import HydraConfig
+from icecream import ic
+from omegaconf import DictConfig, OmegaConf
 
 import rfantibody.rfdiffusion.util
-from rfantibody.rfdiffusion.inference import ab_pose
-from rfantibody.rfdiffusion.RoseTTAFoldModel import RoseTTAFoldModule
-from rfantibody.rfdiffusion.kinematics import get_init_xyz, xyz_to_t2d
-from rfantibody.rfdiffusion.diffusion import Diffuser
-from rfantibody.rfdiffusion.chemical import seq2chars, INIT_CRDS
-from rfantibody.rfdiffusion.util_module import ComputeAllAtomCoords
+from rfantibody.rfdiffusion.chemical import INIT_CRDS, seq2chars
 from rfantibody.rfdiffusion.contigs import ContigMap
+from rfantibody.rfdiffusion.diffusion import Diffuser
+from rfantibody.rfdiffusion.inference import ab_pose, symmetry
 from rfantibody.rfdiffusion.inference import utils as iu
+from rfantibody.rfdiffusion.inference.ab_util import (
+    correct_selfcond,
+    featurize,
+    process_init_selfcond,
+    process_selfcond,
+)
+from rfantibody.rfdiffusion.kinematics import get_init_xyz, xyz_to_t2d
 from rfantibody.rfdiffusion.potentials.manager import PotentialManager
-from rfantibody.rfdiffusion.inference import symmetry
+from rfantibody.rfdiffusion.RoseTTAFoldModel import RoseTTAFoldModule
 from rfantibody.rfdiffusion.util import Dotdict
-from rfantibody.rfdiffusion.inference.ab_util import \
-    process_init_selfcond, \
-    process_selfcond, \
-    correct_selfcond, \
-    featurize
+from rfantibody.rfdiffusion.util_module import ComputeAllAtomCoords
 
 TOR_INDICES  = rfantibody.rfdiffusion.util.torsion_indices
 TOR_CAN_FLIP = rfantibody.rfdiffusion.util.torsion_can_flip

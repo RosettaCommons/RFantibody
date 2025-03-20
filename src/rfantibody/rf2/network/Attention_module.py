@@ -1,8 +1,9 @@
+import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import einsum
-import math
 
 from rfantibody.rf2.network.util_module import init_lecun_normal
 

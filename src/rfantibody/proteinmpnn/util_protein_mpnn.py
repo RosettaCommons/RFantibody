@@ -1,13 +1,14 @@
-import torch
-
-import numpy as np
 import copy
 
-from rfantibody.proteinmpnn.model.protein_mpnn_utils import \
-  ProteinMPNN, \
-  tied_featurize, \
-  _scores, \
-  _S_to_seq
+import numpy as np
+import torch
+
+from rfantibody.proteinmpnn.model.protein_mpnn_utils import (
+    ProteinMPNN,
+    _S_to_seq,
+    _scores,
+    tied_featurize,
+)
 
 #################################
 # Function Definitions

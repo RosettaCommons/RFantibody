@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import os
 import sys
 
@@ -6,9 +7,10 @@ import torch
 import torch.nn.functional as F
 
 from rfantibody.rf2.modules import util
-from rfantibody.rf2.modules.util import check_for_nans, to_device, Dotdict
+from rfantibody.rf2.modules.util import Dotdict, check_for_nans, to_device
 from rfantibody.rf2.network import kinematics
 from rfantibody.rf2.network.util_module import XYZConverter
+
 
 class Preprocess:
     """

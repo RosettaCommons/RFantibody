@@ -1,15 +1,16 @@
 from __future__ import annotations
-from collections import OrderedDict
+
 import copy
+from collections import OrderedDict
 
 import torch
 import torch.nn as nn
-
 from omegaconf import OmegaConf
 
-import rfantibody.rf2.modules.rmsd as rmsd
-from rfantibody.rf2.network.predict import pae_unbin, Predictor
 import rfantibody.rf2.modules.pose_util as pu
+import rfantibody.rf2.modules.rmsd as rmsd
+from rfantibody.rf2.network.predict import Predictor, pae_unbin
+
 
 class AbPredictor(Predictor):
     """

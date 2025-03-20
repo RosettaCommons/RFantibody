@@ -1,5 +1,5 @@
-import torch
 import numpy as np
+import torch
 
 
 def MSABlockDeletion(msa, ins, nb=5):

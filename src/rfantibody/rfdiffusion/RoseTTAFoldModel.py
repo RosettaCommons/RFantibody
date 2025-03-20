@@ -2,10 +2,22 @@ import torch
 import torch.nn as nn
 from opt_einsum import contract as einsum
 
-from rfantibody.rfdiffusion.Embeddings import MSA_emb, Extra_emb, Templ_emb, Recycling, Timestep_emb
+from rfantibody.rfdiffusion.AuxiliaryPredictor import (
+    DistanceNetwork,
+    ExpResolvedNetwork,
+    LDDTNetwork,
+    MaskedTokenNetwork,
+)
+from rfantibody.rfdiffusion.Embeddings import (
+    Extra_emb,
+    MSA_emb,
+    Recycling,
+    Templ_emb,
+    Timestep_emb,
+)
 from rfantibody.rfdiffusion.Track_module import IterativeSimulator
-from rfantibody.rfdiffusion.AuxiliaryPredictor import DistanceNetwork, MaskedTokenNetwork, ExpResolvedNetwork, LDDTNetwork
 from rfantibody.rfdiffusion.util import INIT_CRDS
+
 
 class RoseTTAFoldModule(nn.Module):
     def __init__(self, 

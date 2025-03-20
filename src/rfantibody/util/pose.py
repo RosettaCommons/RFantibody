@@ -1,11 +1,11 @@
-import numpy as np
-
 from dataclasses import dataclass
 from typing import List
 
-from rfantibody.rfdiffusion.chemical import num2aa, aa2num
+import numpy as np
+
+from rfantibody.rf2.modules.parsers import get_cdr_masks_from_remarks, parse_pdblines
+from rfantibody.rfdiffusion.chemical import aa2num, num2aa
 from rfantibody.util.io import ab_write_pdblines
-from rfantibody.rf2.modules.parsers import parse_pdblines, get_cdr_masks_from_remarks
 
 
 def range1(n):

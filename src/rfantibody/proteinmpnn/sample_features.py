@@ -5,6 +5,7 @@ import numpy as np
 from rfantibody.proteinmpnn.util_protein_mpnn import aa_1_3
 from rfantibody.util.pose import Pose
 
+
 class SampleFeatures():
     '''
     This is a struct which keeps all the features related to a single sample together

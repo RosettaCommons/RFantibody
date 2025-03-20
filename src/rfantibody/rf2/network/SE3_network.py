@@ -1,9 +1,10 @@
 import torch
 import torch.nn as nn
-
-from rfantibody.rf2.network.util_module import init_lecun_normal_param
 from se3_transformer.model import SE3Transformer
 from se3_transformer.model.fiber import Fiber
+
+from rfantibody.rf2.network.util_module import init_lecun_normal_param
+
 
 class SE3TransformerWrapper(nn.Module):
     """SE(3) equivariant GCN with attention"""

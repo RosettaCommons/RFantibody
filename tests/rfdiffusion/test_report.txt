@@ -1,0 +1,18 @@
+RFDiffusion Test Suite Report
+============================
+
+Total tests: 4
+Passed: 4
+Failed: 0
+
+Test Details:
+------------
+
+antibody_pdbdesign.sh: ✓ PASSED
+
+antibody_qvdesign.sh: ✓ PASSED
+
+nanobody_pdbdesign.sh: ✓ PASSED
+
+nanobody_qvdesign.sh: ✓ PASSED
+
