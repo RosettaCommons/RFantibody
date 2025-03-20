@@ -14,7 +14,7 @@ inference:
   cautious: True
 
 model:
-  model_weights: /home/weights/RFab_overall_best.pt
+  model_weights: /home/weights/RF2_ab.pt
 
 model_param:
   n_extra_block: 4

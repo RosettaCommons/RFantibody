@@ -35,14 +35,14 @@ def main():
     # Determine which modules to test
     modules = []
     if args.module == 'all':
-        modules = ['rfdiffusion', 'proteinmpnn']
+        modules = ['rfdiffusion', 'proteinmpnn', 'rf2']
     else:
         modules = [args.module]
     
     # Validate module selection
     for module in modules:
-        if module not in ['rfdiffusion', 'proteinmpnn']:
-            print(f"Error: Unknown module '{module}'. Choose from: rfdiffusion, proteinmpnn, all")
+        if module not in ['rfdiffusion', 'proteinmpnn', 'rf2']:
+            print(f"Error: Unknown module '{module}'. Choose from: rfdiffusion, proteinmpnn, rf2, all")
             return 1
     
     # If creating reference files, run scripts and copy outputs for each module

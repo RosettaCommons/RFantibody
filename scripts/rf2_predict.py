@@ -1,4 +1,6 @@
 import hydra
+import random
+import numpy as np
 import torch
 from hydra.core.hydra_config import HydraConfig
 
@@ -14,6 +16,18 @@ def main(conf: HydraConfig) -> None:
     Main function
     """
     print(f'Running RF2 with the following configs: {conf}')
+    
+    # Set up deterministic mode if seed is provided
+    if hasattr(conf.inference, 'seed') and conf.inference.seed is not None:
+        seed = conf.inference.seed
+        print(f"Setting up deterministic mode with seed {seed}")
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+    
     done_list=util.get_done_list(conf)
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     preprocessor=Preprocess(pose_to_inference_RFinput, conf)

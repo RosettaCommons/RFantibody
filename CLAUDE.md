@@ -49,7 +49,11 @@
 - Added ProteinMPNN test module with deterministic test framework
 - Implemented deterministic mode flag (-deterministic) in proteinmpnn_interface_design.py
 - Created ab_seq_design.sh test script for ProteinMPNN with fixed random seeds and increased temperature
-- Updated run_tests.py to support multiple test modules (rfdiffusion, proteinmpnn)
+- Added RF2 test module with ab_prediction.sh test script
+- Fixed RF2 model weight path in base.yaml to reference the correct model file
+- Added seed parameter to RF2 prediction script for deterministic testing
+- Updated run_tests.py to support multiple test modules (rfdiffusion, proteinmpnn, rf2)
 - Added --module parameter to run_tests.py to selectively run specific test modules
 - Added automated reference file generation for each supported GPU type
-- Verified test suite works properly with both H100 and A4000 GPUs
+- Fixed issue with RF2 preprocessing when multiple input files are present
+- Verified all test modules (rfdiffusion, proteinmpnn, rf2) run successfully
