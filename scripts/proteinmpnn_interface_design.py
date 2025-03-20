@@ -1,8 +1,10 @@
 import argparse
 import os
+import random
 import sys
 import time
 
+import numpy as np
 import torch
 
 import rfantibody.proteinmpnn.util_protein_mpnn as mpnn_util
@@ -30,6 +32,8 @@ parser.add_argument("-checkpoint_name", type=str, default='check.point',
 parser.add_argument("-debug", action="store_true", default=False,
                     help='When active, errors will cause the script to crash and the error message ' + \
                          'to be printed out (default: False)')
+parser.add_argument("-deterministic", action="store_true", default=False,
+                    help='Enable deterministic mode by setting fixed seeds and deterministic algorithms (default: False)')
 
 # Design Arguments
 parser.add_argument("-loop_string", type=str, default='H1,H2,H3,L1,L2,L3',
@@ -53,6 +57,19 @@ parser.add_argument("-num_connections", type=int, default=48,
                          'better interface design but will cost more to run the model.')
 
 args = parser.parse_args(sys.argv[1:])
+
+# Set up deterministic mode if requested
+if args.deterministic:
+    print("Setting up deterministic mode with fixed seeds")
+    # Set fixed seeds for reproducibility
+    random.seed(42)
+    np.random.seed(42)
+    torch.manual_seed(42)
+    torch.cuda.manual_seed_all(42)
+    
+    # Enable deterministic behavior
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 class ProteinMPNN_runner():
     '''

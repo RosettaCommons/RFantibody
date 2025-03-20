@@ -21,4 +21,5 @@ include/USalign/pdbAtomName
 include/USalign/qTMclust
 include/USalign/se
 include/USalign/xyz_sfetch
+check.point
 outputs

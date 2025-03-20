@@ -1,0 +1,12 @@
+RFDiffusion Test Suite Report
+============================
+
+Total tests: 1
+Passed: 1
+Failed: 0
+
+Test Details:
+------------
+
+ab_seq_design.sh: ✓ PASSED
+

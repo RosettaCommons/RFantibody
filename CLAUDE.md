@@ -46,3 +46,10 @@
 - Implemented proper test module organization with __init__.py files and clear directory structure
 - Updated path references in test scripts and runners to work with new directory structure
 - Improved test output organization with module-specific example_outputs directories
+- Added ProteinMPNN test module with deterministic test framework
+- Implemented deterministic mode flag (-deterministic) in proteinmpnn_interface_design.py
+- Created ab_seq_design.sh test script for ProteinMPNN with fixed random seeds and increased temperature
+- Updated run_tests.py to support multiple test modules (rfdiffusion, proteinmpnn)
+- Added --module parameter to run_tests.py to selectively run specific test modules
+- Added automated reference file generation for each supported GPU type
+- Verified test suite works properly with both H100 and A4000 GPUs
