@@ -30,6 +30,14 @@
 - The test framework automatically detects GPU type and uses appropriate reference files
 
 ## Development Log
+### 2025-04-10
+- Reorganized test input files into module-specific directories
+- Created dedicated inputs_for_test directories for each test module
+- Moved input files from shared example directories to module-specific locations
+- Updated all test scripts to reference the new input paths
+- Improved test modularity by keeping inputs closer to their test modules
+- Separated test inputs from example inputs for clearer organization
+
 ### 2025-03-20
 - Reorganized test reference outputs to support GPU-specific comparisons
 - Added A4000_references directory for A4000 GPU reference outputs
