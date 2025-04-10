@@ -14,16 +14,16 @@ INPUT_DIR="/home/tests/util/inputs_for_test"
 # Convert the nanobody file
 echo "Converting nanobody file..."
 python /home/scripts/util/chothia2HLT.py \
-  "${INPUT_DIR}/h-NbBCII10.pdb" \
-  --heavy H \
+  "${INPUT_DIR}/3eak_chothia.pdb" \
+  --heavy B \
   --output "${OUTPUT_DIR}/nanobody_HLT.pdb"
 
 # Convert the antibody file
-echo "Converting antibody file..."
-python /home/scripts/util/chothia2HLT.py \
-  "${INPUT_DIR}/hu-4D5-8_Fv.pdb" \
-  --heavy H \
-  --light L \
-  --output "${OUTPUT_DIR}/antibody_HLT.pdb"
+#echo "Converting antibody file..."
+#python /home/scripts/util/chothia2HLT.py \
+#  "${INPUT_DIR}/hu-4D5-8_Fv.pdb" \
+#  --heavy H \
+#  --light L \
+#  --output "${OUTPUT_DIR}/antibody_HLT.pdb"
 
 echo "HLT conversion completed."

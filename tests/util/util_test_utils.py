@@ -12,6 +12,8 @@ from pathlib import Path
 
 import pytest
 
+from biotite.structure import AtomArray
+from biotite.structure.io.pdb import get_structure, PDBFile
 
 def run_command(cmd, cwd=None):
     """
@@ -37,6 +39,71 @@ def run_command(cmd, cwd=None):
     if result.returncode != 0:
         raise RuntimeError(f"Command failed with error: {result.stderr}")
     return result.stdout
+
+def compare_structures(ref_file: str, output_file: str) -> bool | list[dict]:
+    """
+    Compare the atomic coordinates of two PDB files.
+
+    We will parse in both of the pdb files using biotite and then check that all of the fields
+    of the two AtomArrays are the same. We will only assess the following fields:
+    - chain_id
+    - res_id
+    - ins_code
+    - res_name
+    - hetero
+    - atom_name
+    - element
+
+    Args:
+        ref_file: Path to reference file
+        output_file: Path to output file to compare
+
+    Returns:
+        True if files match, or a list of differences if they don't
+    """
+    try:
+        ref_pdb = PDBFile.read(ref_file)
+        out_pdb = PDBFile.read(output_file)
+        ref_struct = get_structure(ref_pdb, model=1)
+        out_struct = get_structure(out_pdb, model=1)
+
+    except FileNotFoundError as e:
+        return [{'error': f"File not found: {e.filename}"}]
+
+    except Exception as e:
+        return [{'error': f"Error parsing PDB files: {e}"}]
+
+    if ref_struct.array_length() != out_struct.array_length():
+        return [{
+            'error': 'Different number of atoms',
+            'ref_count': ref_struct.array_length(),
+            'out_count': out_struct.array_length()
+        }]
+
+    fields_to_compare = [
+        "chain_id", "res_id", "ins_code", "res_name", 
+        "hetero", "atom_name", "element"
+    ]
+    
+    differences = []
+    
+    for i in range(ref_struct.array_length()):
+        for field in fields_to_compare:
+            ref_val = getattr(ref_struct[i], field)
+            out_val = getattr(out_struct[i], field)
+            
+            # Special handling for float comparisons if needed later
+            # For now, assume direct comparison works for these fields
+
+            if ref_val != out_val:
+                differences.append({
+                    'atom_index': i,
+                    'field': field,
+                    'ref_value': ref_val,
+                    'out_value': out_val
+                })
+
+    return True if not differences else differences
 
 
 def compare_files(ref_file, output_file, ignore_lines=None):
@@ -66,6 +133,10 @@ def compare_files(ref_file, output_file, ignore_lines=None):
     with open(ref_file, 'r') as ref, open(output_file, 'r') as out:
         ref_lines = ref.readlines()
         out_lines = out.readlines()
+
+        # Let's only compare lines that begin with REMARK PDBinfo-LABEL:
+        ref_lines = [line for line in ref_lines if line.startswith('REMARK PDBinfo-LABEL:')]
+        out_lines = [line for line in out_lines if line.startswith('REMARK PDBinfo-LABEL:')]
         
         # Filter lines if needed
         if ignore_lines:

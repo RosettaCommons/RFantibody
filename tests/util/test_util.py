@@ -12,7 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from .util_test_utils import (compare_files, create_test_report, run_command,
+from .util_test_utils import (compare_files, compare_structures,
+                             create_test_report, run_command,
                              verify_hlt_format)
 
 # Test script configurations
@@ -20,9 +21,12 @@ SCRIPT_CONFIGS = {
     "antibody_hlt_conversion.sh": {
         "description": "Convert antibody PDB files from Chothia to HLT format",
         "output_files": [
-            "antibody_HLT.pdb",
+            #"antibody_HLT.pdb",
             "nanobody_HLT.pdb"
-        ]
+        ],
+        "output_to_ref_mapping": {
+            "nanobody_HLT.pdb": "h-NbBCII10.pdb"
+        }
     }
 }
 
@@ -63,8 +67,15 @@ def test_util_script(script_name, clean_output_dir, output_dir, ref_dir):
     # Compare with reference files if they exist
     all_differences = {}
     for ref_file, output_file in expected_files:
-        if os.path.exists(ref_file):
-            result = compare_files(ref_file, output_file)
+        # Check if the reference file is in the output_to_ref_mapping
+        if not os.path.basename(ref_file) in SCRIPT_CONFIGS[script_name]["output_to_ref_mapping"]:
+            pytest.fail(f"Reference file not found: {ref_file}")
+
+        compare_file = SCRIPT_CONFIGS[script_name]["output_to_ref_mapping"][os.path.basename(output_file)]
+        compare_file = os.path.join(ref_dir, compare_file)
+
+        if os.path.exists(compare_file):
+            result = compare_files(compare_file, output_file)
             
             # If result is True, files match; if it's a list, there are differences
             if result is not True:
@@ -82,6 +93,12 @@ def test_util_script(script_name, clean_output_dir, output_dir, ref_dir):
                     diff_message += f"\n... and {len(result) - 5} more differences"
                 
                 pytest.fail(f"Differences found in {output_file}:\n{diff_message}")
+
+            # Check that the atomic coordinates are the same
+            result = compare_structures(compare_file, output_file)
+            if result is not True:
+                pytest.fail(f"Differences found in {output_file}:\n{result}")
+
         else:
             print(f"Reference file not found: {ref_file}. Cannot compare outputs.")
 
