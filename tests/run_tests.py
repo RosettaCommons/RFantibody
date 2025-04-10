@@ -35,34 +35,48 @@ def main():
     # Determine which modules to test
     modules = []
     if args.module == 'all':
-        modules = ['rfdiffusion', 'proteinmpnn', 'rf2']
+        modules = ['rfdiffusion', 'proteinmpnn', 'rf2', 'util']
     else:
         modules = [args.module]
     
     # Validate module selection
     for module in modules:
-        if module not in ['rfdiffusion', 'proteinmpnn', 'rf2']:
-            print(f"Error: Unknown module '{module}'. Choose from: rfdiffusion, proteinmpnn, rf2, all")
+        if module not in ['rfdiffusion', 'proteinmpnn', 'rf2', 'util']:
+            print(f"Error: Unknown module '{module}'. Choose from: rfdiffusion, proteinmpnn, rf2, util, all")
             return 1
     
     # If creating reference files, run scripts and copy outputs for each module
     if args.create_refs:
         print("Running scripts to create reference files...")
         
-        # First check if we're on the right GPU
-        try:
-            import torch
-            if not torch.cuda.is_available():
-                print("Error: No GPU found. Reference files must be created on a supported GPU (A4000 or H100).")
-                return 1
-            
-            gpu_info = torch.cuda.get_device_properties(0)
-            if 'A4000' not in gpu_info.name and 'H100' not in gpu_info.name:
-                print(f"Error: Unsupported GPU type. Found {gpu_info.name}, tests require A4000 or H100.")
-                return 1
-            print(f"Creating reference files for {gpu_info.name} GPU")
-        except ImportError:
-            print("Warning: torch not found, cannot check GPU type")
+        # First check if we're on the right GPU for GPU-dependent modules
+        gpu_modules = ['rfdiffusion', 'proteinmpnn', 'rf2']
+        gpu_dependent_modules = [m for m in modules if m in gpu_modules]
+        
+        if gpu_dependent_modules:
+            try:
+                import torch
+                if not torch.cuda.is_available():
+                    print("Error: No GPU found. Reference files for GPU modules must be created on a supported GPU (A4000 or H100).")
+                    if all(m in gpu_modules for m in modules):
+                        return 1
+                    else:
+                        print("Continuing with non-GPU modules only.")
+                        modules = [m for m in modules if m not in gpu_modules]
+                
+                else:
+                    gpu_info = torch.cuda.get_device_properties(0)
+                    if 'A4000' not in gpu_info.name and 'H100' not in gpu_info.name:
+                        print(f"Error: Unsupported GPU type. Found {gpu_info.name}, tests require A4000 or H100.")
+                        if all(m in gpu_modules for m in modules):
+                            return 1
+                        else:
+                            print("Continuing with non-GPU modules only.")
+                            modules = [m for m in modules if m not in gpu_modules]
+                    else:
+                        print(f"Creating reference files for {gpu_info.name} GPU")
+            except ImportError:
+                print("Warning: torch not found, cannot check GPU type")
         
         # Process each selected module
         for module in modules:
