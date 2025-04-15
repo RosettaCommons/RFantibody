@@ -38,9 +38,9 @@ def parse_args():
     parser.add_argument('--target', '-T', help='Target chain ID(s), comma-separated')
     parser.add_argument('--output', '-o', help='Output HLT file path')
     parser.add_argument('--whole_fab', '-w', action='store_true', help='Keep entire Fab region')
-    parser.add_argument('--Hcrop', default=115, help='Chothia residue number to crop to for heavy chain a ' + \
+    parser.add_argument('--Hcrop', default=115, type=int, help='Chothia residue number to crop to for heavy chain a ' + \
                         'reasonable number is between 105 and 115')
-    parser.add_argument('--Lcrop', default=110, help='Chothia residue number to crop to for light chain a ' + \
+    parser.add_argument('--Lcrop', default=110, type=int, help='Chothia residue number to crop to for light chain a ' + \
                         'reasonable number is between 100 and 110')
 
     args = parser.parse_args()

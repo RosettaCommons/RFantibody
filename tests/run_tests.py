@@ -21,11 +21,9 @@ def main():
     """Main function to run the tests"""
     parser = argparse.ArgumentParser(description='Run RFAntibody tests')
     parser.add_argument('--module', type=str, default='all',
-                        help='Test module to run (rfdiffusion, proteinmpnn, or all)')
+                        help='Test module to run (rfdiffusion, proteinmpnn, rf2, util, or all)')
     parser.add_argument('--create-refs', action='store_true', 
                         help='Create reference files from current outputs')
-    parser.add_argument('--run-all', action='store_true',
-                        help='Run all tests and generate a report without failing on first error')
     parser.add_argument('--verbose', '-v', action='store_true',
                         help='Enable verbose output')
     parser.add_argument('--keep-outputs', action='store_true',
@@ -120,12 +118,8 @@ def main():
     for module in modules:
         print(f"\nRunning {module} tests...")
         
-        if args.run_all:
-            print(f"Running {module} tests as a suite...")
-            # Run just the suite test that won't fail on first error
-            pytest_args = ["-xvs", f"tests/{module}/test_{module}.py::test_all_scripts_as_suite"]
-        else:
-            pytest_args = ["-xvs", f"tests/{module}/test_{module}.py"]
+        # Configure pytest arguments
+        pytest_args = ["-xvs", f"tests/{module}/test_{module}.py"]
             
         if args.verbose:
             pytest_args.append("-v")
@@ -146,4 +140,4 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main()) 
+    sys.exit(main())
