@@ -2,7 +2,8 @@
 
 **Structure-Based _de novo_ Antibody Design with Fixes and Docker Support**
 
-This is a modified and functional fork of [RosettaCommons/RFantibody](https://github.com/RosettaCommons/RFantibody), enhanced for easier use, clean installation via Docker, and script compatibility.
+This is a modified and functional fork of [RosettaCommons/RFantibody](https://github.com/RosettaCommons/RFantibody), enhanced for easier use, clean installation via Docker, and script compatibility. 
+Done by **Orsolya Gereben @ hegelab.org**
 
 ## Key Fixes and Additions
 
