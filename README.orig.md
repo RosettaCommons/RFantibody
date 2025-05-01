@@ -125,7 +125,7 @@ The antibody-finetuned version of RFdiffusion in RFantibody requires an HLT-rema
 ```
 # From inside of the rfantibody container
 
-poetry run python /home/scripts/util/chothia_to_HLT.py -inpdb mychothia.pdb -outpdb myHLT.pdb
+poetry run python /home/scripts/util/chothia2HLT.py -inpdb mychothia.pdb -outpdb myHLT.pdb
 ```
 
 This script expects a Chothia annotated .pdb file. A great source for these files is [SabDab](https://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/sabdab), which provides Chothia annotated structures of all antibodies and nanobodies in the PDB and is updated every few months.

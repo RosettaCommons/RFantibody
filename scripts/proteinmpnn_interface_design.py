@@ -53,17 +53,21 @@ parser.add_argument("-omit_AAs", type=str, default='CX',
 parser.add_argument("-num_connections", type=int, default=48,
                     help='Number of neighbors each residue is connected to, default 48, higher number leads to ' + \
                          'better interface design but will cost more to run the model.')
+parser.add_argument("-name_tag",  default="dldesign",
+                    help='To append after the input file name')
 
 args = parser.parse_args(sys.argv[1:])
+
 
 class ProteinMPNN_runner():
     '''
     This class is designed to run the ProteinMPNN model on a single input. This class handles the loading of the model,
     the loading of the input data, the running of the model, and the processing of the output
     '''
-
+    
     def __init__(self, args, struct_manager):
         self.struct_manager = struct_manager
+        self.outtag = ""
 
         if torch.cuda.is_available():
             print('Found GPU will run ProteinMPNN on GPU')
@@ -128,13 +132,15 @@ class ProteinMPNN_runner():
 
         # Iterate though each seq score pair and thread the sequence onto the pose
         # Then write each pose to a pdb file
-        prefix = f"{sample_feats.tag}_dldesign"
+        prefix = f"{sample_feats.tag}_{args.name_tag}"
+        print("prefix",prefix)
+        print(seqs_scores)
         for idx, (seq, _) in enumerate(seqs_scores): 
             sample_feats.thread_mpnn_seq(seq)
 
-            outtag = f"{prefix}_{idx}"
+            self.outtag = f"{prefix}_{idx}"
 
-            self.struct_manager.dump_pose(sample_feats.pose, outtag)
+            self.struct_manager.dump_pose(sample_feats.pose, self.outtag)
 
     def run_model(self, tag, args):
         t0 = time.time()
@@ -180,7 +186,7 @@ for pdb in struct_manager.iterate():
             print(f"Struct with tag {pdb} failed in {seconds} seconds with error: {sys.exc_info()[0]}")
 
     # We are done with one pdb, record that we finished
-    struct_manager.record_checkpoint(pdb)
+    struct_manager.record_checkpoint(f"{args.outpdbdir}/{proteinmpnn_runner.outtag}.pdb")
     
 
 
