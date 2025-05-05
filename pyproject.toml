@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "rfantibody"
+name = "rfantibody3"
 version = "1.0.0"
 description = ""
 authors = [
@@ -9,6 +9,7 @@ authors = [
 readme = "README.md"
 packages = [
 {include = "rfantibody", from = "src"},
+{include = "rfdiffusion", from = "src/rfantibody"},
 {include = "include"},
 {include = "se3_transformer", from = "include/SE3Transformer"}
 ]
@@ -36,6 +37,7 @@ opt-einsum = "*"
 dgl = { file = "./include/dgl/dgl-2.4.0+cu118-cp310-cp310-manylinux1_x86_64.whl" }
 e3nn = "*"
 pyrsistent = "*"
+biotite = "*"
 
 [tool.poetry.group.test]
 optional = true

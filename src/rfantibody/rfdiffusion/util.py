@@ -19,7 +19,7 @@ def generate_Cbeta(N,Ca,C):
     # recreate Cb given N,Ca,C
     b = Ca - N 
     c = C - Ca
-    a = torch.cross(b, c, dim=-1)
+    a = torch.linalg.cross(b, c, dim=-1)
     #Cb = -0.58273431*a + 0.56802827*b - 0.54067466*c + Ca
     # fd: below matches sidechain generator (=Rosetta params)
     Cb = -0.57910144*a + 0.5689693*b - 0.5441217*c + Ca
@@ -62,7 +62,7 @@ def th_ang_v(ab,bc,eps:float=1e-8):
 def th_dih_v(ab,bc,cd):
     def th_cross(a,b):
         a,b = torch.broadcast_tensors(a,b)
-        return torch.cross(a,b, dim=-1)
+        return torch.linalg.cross(a,b, dim=-1)
     def th_norm(x,eps:float=1e-8):
         return x.square().sum(-1,keepdim=True).add(eps).sqrt()
     def th_N(x,alpha:float=0):
@@ -91,7 +91,7 @@ def rigid_from_3_points(N, Ca, C, non_ideal=False, eps=1e-8):
     e1 = v1/(torch.norm(v1, dim=-1, keepdim=True)+eps)
     u2 = v2-(torch.einsum('bli, bli -> bl', e1, v2)[...,None]*e1)
     e2 = u2/(torch.norm(u2, dim=-1, keepdim=True)+eps)
-    e3 = torch.cross(e1, e2, dim=-1)
+    e3 = torch.linalg.cross(e1, e2, dim=-1)
     R = torch.cat([e1[...,None], e2[...,None], e3[...,None]], axis=-1) #[B,L,3,3] - rotation matrix
     
     if non_ideal:
@@ -220,7 +220,7 @@ def make_frame(X, Y):
     Xn = X / torch.linalg.norm(X)
     Y = Y - torch.dot(Y, Xn) * Xn
     Yn = Y / torch.linalg.norm(Y)
-    Z = torch.cross(Xn,Yn)
+    Z = torch.linalg.cross(Xn,Yn)
     Zn =  Z / torch.linalg.norm(Z)
 
     return torch.stack((Xn,Yn,Zn), dim=-1)

@@ -257,13 +257,13 @@ class ComputeAllAtomCoords(nn.Module):
         NCr = 0.5*(basexyzs[:,:,2,:3]+basexyzs[:,:,0,:3])
         CAr = (basexyzs[:,:,1,:3])
         CBr = (basexyzs[:,:,4,:3])
-        CBrotaxis1 = (CBr-CAr).cross(NCr-CAr)
+        CBrotaxis1 = torch.linalg.cross(CBr-CAr, NCr-CAr, dim=2)  # deprecated CBrotaxis1 = (CBr-CAr).cross(NCr-CAr)
         CBrotaxis1 /= torch.linalg.norm(CBrotaxis1, dim=-1, keepdim=True)+1e-8
         
         # CB twist
         NCp = basexyzs[:,:,2,:3] - basexyzs[:,:,0,:3]
         NCpp = NCp - torch.sum(NCp*NCr, dim=-1, keepdim=True)/ torch.sum(NCr*NCr, dim=-1, keepdim=True) * NCr
-        CBrotaxis2 = (CBr-CAr).cross(NCpp)
+        CBrotaxis2 = torch.linalg.cross(CBr-CAr,NCpp,dim=2)  # deprecated CBrotaxis2 = (CBr-CAr).cross(NCpp)
         CBrotaxis2 /= torch.linalg.norm(CBrotaxis2, dim=-1, keepdim=True)+1e-8
         
         CBrot1 = make_rot_axis(alphas[:,:,7,:], CBrotaxis1 )
