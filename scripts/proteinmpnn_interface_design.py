@@ -5,6 +5,7 @@ import argparse
 import time
 
 import torch
+import numpy as np
 
 import rfantibody.proteinmpnn.util_protein_mpnn as mpnn_util
 from rfantibody.proteinmpnn.struct_manager import StructManager
@@ -53,10 +54,13 @@ parser.add_argument("-omit_AAs", type=str, default='CX',
 parser.add_argument("-num_connections", type=int, default=48,
                     help='Number of neighbors each residue is connected to, default 48, higher number leads to ' + \
                          'better interface design but will cost more to run the model.')
-parser.add_argument("-name_tag",  default="dldesign",
-                    help='To append after the input file name')
+parser.add_argument("-name_tag", type=str, default="dldesign",
+                    help=f'To append after the input file name, default: dldesign')
+parser.add_argument("-seed",  default="",
+                    help='Seed, should be in the 0-999 range, default: random seed')
 
 args = parser.parse_args(sys.argv[1:])
+
 
 
 class ProteinMPNN_runner():
@@ -88,6 +92,7 @@ class ProteinMPNN_runner():
         self.temperature = args.temperature
         self.seqs_per_struct = args.seqs_per_struct
         self.omit_AAs = [ letter for letter in args.omit_AAs.upper() if letter in list("ARNDCQEGHILKMFPSTWYVX") ]
+        print(f"The following amino acids will be omitted:  {self.omit_AAs}")
 
     def sequence_optimize(self, sample_feats: SampleFeatures) -> list[tuple[str, float]]:
         t0 = time.time()
@@ -166,6 +171,17 @@ class ProteinMPNN_runner():
 ####################
 ####### Main #######
 ####################
+
+if args.seed:
+    seed=int(args.seed)
+    if seed < 0 or seed > 999:
+        print("Seed has to be in the 0-999 range, 111 will be used!") 
+    print(f"Seed: {seed} will be used")
+else:
+    seed=int(np.random.randint(0, high=999, size=1, dtype=int)[0])
+    print("Random seed wil be used")
+torch.manual_seed(seed)
+
 
 struct_manager = StructManager(args)
 proteinmpnn_runner = ProteinMPNN_runner(args, struct_manager)

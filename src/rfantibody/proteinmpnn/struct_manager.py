@@ -61,7 +61,7 @@ class StructManager():
                         print("file exist", line)
                         self.finished_structs.add(line.strip())
                     else:
-                        print("file not exist", line)
+                        # print("file not exist", line)
                         rewrite = True
             f.close()
             if rewrite:
