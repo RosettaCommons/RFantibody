@@ -1,8 +1,8 @@
 # RFantibody (hegelab fork)
 
-**Structure-Based _de novo_ Antibody Design with Fixes and Docker Support**
+**Structure-Based _de novo_ Antibody Design with Fixes and Docker + Singularity Support**
 
-This is a modified and functional fork of [RosettaCommons/RFantibody](https://github.com/RosettaCommons/RFantibody), enhanced for easier use, clean installation via Docker, and script compatibility. 
+This is a modified and functional fork of [RosettaCommons/RFantibody](https://github.com/RosettaCommons/RFantibody), enhanced for easier use, clean installation via Docker or Singularity, and script compatibility. 
 Done by **Orsolya Gereben @ hegelab.org**
 
 ## Key Fixes and Additions
@@ -13,6 +13,7 @@ Done by **Orsolya Gereben @ hegelab.org**
 - Quiver-based workflows are not tuned
 - Container user write permissions fixed with `--user $(id -u)`
 - Preserved original README as `README.orig.md`
+- Singularity definition file (`singularity.def`) added for HPC-compatible container builds
 
 ## Installation (Docker-based)
 
@@ -58,6 +59,19 @@ docker run --name rfantibody2 --gpus all -v $(pwd):/home --memory 10g --user $(i
 
 ```bash
 source /opt/RFantibody/setenv.sh
+```
+
+## Singularity-based Installation and Usage
+
+```
+singularity build --fakeroot RFantibody_base.sif singularity.def
+
+singularity shell --nv --no-home -B $(pwd):/opt/RFantibody RFantibody_base.sif
+(Singularity)$ cd $HOME
+(Singularity)$ bash include/setup_sif.sh
+(Singularity)$ exit
+
+singularity run --nv --no-home -B $(pwd):/opt/RFantibody RFantibody_base.sif poetry run python /opt/RFantibody/scripts/rfdiffusion_inference.py ... (please see detailed usage overview/examples below)
 ```
 
 ## Usage Overview
