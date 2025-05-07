@@ -7,8 +7,8 @@ inference:
   no_confidence: False
   output_prefix: 'test_output/runnb'
   softmax_T: 0.1
-  ckpt_path: '/home/ahern/projects/BFF/rf_diffusion/models/no_fape/models/BFF_18.pt'
-  input_pdb :  '/home/ahern/projects/BFF/rf_diffusion/training_pdbs/training_pdbs/test_epoch_0_1097_diff_cn_t_114true.pdb'
+  ckpt_path: '/opt/RFantibody/ahern/projects/BFF/rf_diffusion/models/no_fape/models/BFF_18.pt'
+  input_pdb :  '/opt/RFantibody/ahern/projects/BFF/rf_diffusion/training_pdbs/training_pdbs/test_epoch_0_1097_diff_cn_t_114true.pdb'
   num_designs: 1
   design_startnum: 0
 

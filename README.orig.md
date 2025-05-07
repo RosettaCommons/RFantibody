@@ -93,7 +93,7 @@ This will put you into the RFantibody container at the /home directory which mir
 ## Setup the Python Environment
 From the RFantibody container run the following to setup the python environment:
 ```
-bash /home/include/setup.sh
+bash /opt/RFantibody/include/setup.sh
 ```
 This does the following:
 - Download [Deep Graph Library](https://www.dgl.ai) in preparation of building the python environment
@@ -125,7 +125,7 @@ The antibody-finetuned version of RFdiffusion in RFantibody requires an HLT-rema
 ```
 # From inside of the rfantibody container
 
-poetry run python /home/scripts/util/chothia2HLT.py -inpdb mychothia.pdb -outpdb myHLT.pdb
+poetry run python /opt/RFantibody/scripts/util/chothia2HLT.py -inpdb mychothia.pdb -outpdb myHLT.pdb
 ```
 
 This script expects a Chothia annotated .pdb file. A great source for these files is [SabDab](https://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/sabdab), which provides Chothia annotated structures of all antibodies and nanobodies in the PDB and is updated every few months.
@@ -142,15 +142,15 @@ The first step in RFantibody is to generate antibody-target docks using an antib
 ```
 # From inside of the rfantibody container
 
-poetry run python  /home/src/rfantibody/scripts/rfdiffusion_inference.py \
+poetry run python  /opt/RFantibody/src/rfantibody/scripts/rfdiffusion_inference.py \
     --config-name antibody \
-    antibody.target_pdb=/home/scripts/examples/example_inputs/rsv_site3.pdb \
-    antibody.framework_pdb=/home/scripts/examples/example_inputs/hu-4D5-8_Fv.pdb \
-    inference.ckpt_override_path=/home/weights/RFdiffusion_Ab.pt \
+    antibody.target_pdb=/opt/RFantibody/scripts/examples/example_inputs/rsv_site3.pdb \
+    antibody.framework_pdb=/opt/RFantibody/scripts/examples/example_inputs/hu-4D5-8_Fv.pdb \
+    inference.ckpt_override_path=/opt/RFantibody/weights/RFdiffusion_Ab.pt \
     'ppi.hotspot_res=[T305,T456]' \
     'antibody.design_loops=[L1:8-13,L2:7,L3:9-11,H1:7,H2:6,H3:5-13]' \
     inference.num_designs=20 \
-    inference.output_prefix=/home/scripts/examples/example_outputs/ab_des
+    inference.output_prefix=/opt/RFantibody/scripts/examples/example_outputs/ab_des
 ```
 
 Let's go through this command in more detail to understand what these configs are doing:
@@ -166,7 +166,7 @@ We provide an example command with example inputs which can be run as follows:
 ```
 # From inside of the rfantibody container
 
-bash /home/scripts/examples/rfdiffusion/antibody_pdbdesign.sh
+bash /opt/RFantibody/scripts/examples/rfdiffusion/antibody_pdbdesign.sh
 ```
 
 ## ProteinMPNN
@@ -177,21 +177,21 @@ At its simplest, ProteinMPNN may be run on a directory of HLT-formatted .pdb fil
 ```
 # From inside of the rfantibody container
 
-poetry run python /home/scripts/proteinmpnn_interface_design.py \
+poetry run python /opt/RFantibody/scripts/proteinmpnn_interface_design.py \
     -pdbdir /path/to/inputdir \
     -outpdbdir /path/to/outputdir
 ```
 
 This will design all CDR loops and will provide one sequence per input structure. There are many more arguments that may be experimented with and are explained by running:
 ```
-poetry run python /home/scripts/proteinmpnn_interface_design.py --help
+poetry run python /opt/RFantibody/scripts/proteinmpnn_interface_design.py --help
 ```
 
 We provide an example command with example inputs which can be run as follows:
 ```
 # From inside of the rfantibody container
 
-bash /home/scripts/examples/proteinmpnn/ab_pdb_example.sh
+bash /opt/RFantibody/scripts/examples/proteinmpnn/ab_pdb_example.sh
 ```
 
 ## RF2
@@ -202,7 +202,7 @@ At it's simplest, RF2 may be run on a directory of HLT-formatted .pdb files usin
 ```
 # From inside of the rfantibody container
 
-poetry run python /home/scripts/rf2_predict.py \
+poetry run python /opt/RFantibody/scripts/rf2_predict.py \
     input.pdb_dir=/path/to/inputdir \
     output.pdb_dir=/path/to/outputdir
 ```
@@ -213,7 +213,7 @@ We provide an example with example inputs which can be run as follows:
 ```
 # From inside of the rfantibody container
 
-bash /home/scripts/examples/rf2/ab_pdb_example.sh
+bash /opt/RFantibody/scripts/examples/rf2/ab_pdb_example.sh
 ```
 
 # Practical Considerations for Antibody Design

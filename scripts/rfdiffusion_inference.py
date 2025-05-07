@@ -42,7 +42,7 @@ def make_deterministic(seed=0):
         np.random.seed(seed)
         random.seed(seed)
 
-@hydra.main(version_base=None, config_path='/home/src/rfantibody/rfdiffusion/config/inference', config_name='base')
+@hydra.main(version_base=None, config_path='/opt/RFantibody/src/rfantibody/rfdiffusion/config/inference', config_name='base')
 def main(conf: HydraConfig) -> None:
     log = logging.getLogger(__name__)
     if conf.inference.deterministic:

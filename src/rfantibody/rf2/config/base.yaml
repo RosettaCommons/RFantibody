@@ -14,7 +14,7 @@ inference:
   cautious: True
 
 model:
-  model_weights: /home/weights/RF2_ab.pt
+  model_weights: /opt/RFantibody/weights/RF2_ab.pt
 
 model_param:
   n_extra_block: 4

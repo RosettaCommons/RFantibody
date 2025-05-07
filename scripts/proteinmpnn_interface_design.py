@@ -41,7 +41,7 @@ parser.add_argument("-seqs_per_struct", type=int, default="1",
                     help="The number of sequences to generate for each structure (default: 1)")
 
 # ProteinMPNN Specific Arguments
-default_ckpt = os.path.join( os.path.dirname(__file__), '/home/weights/ProteinMPNN_v48_noise_0.2.pt')
+default_ckpt = os.path.join( os.path.dirname(__file__), '/opt/RFantibody/weights/ProteinMPNN_v48_noise_0.2.pt')
 parser.add_argument("-checkpoint_path", type=str, default=default_ckpt)
 parser.add_argument("-temperature", type=float, default=0.000001, help='An a3m file containing the MSA of your target')
 parser.add_argument("-augment_eps", type=float, default=0,

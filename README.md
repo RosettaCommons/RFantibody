@@ -29,7 +29,7 @@ docker run --name rfantibody --gpus all -v $(pwd):/home --memory 10g -it rfantib
 ## Python Environment Setup (inside container)
 
 ```bash
-bash /home/include/setup.sh
+bash /opt/RFantibody/include/setup.sh
 ```
 
 This script:
@@ -57,7 +57,7 @@ docker run --name rfantibody2 --gpus all -v $(pwd):/home --memory 10g --user $(i
 **Optional: Change bash prompt inside container**
 
 ```bash
-source /home/setenv.sh
+source /opt/RFantibody/setenv.sh
 ```
 
 ## Usage Overview
@@ -65,28 +65,28 @@ source /home/setenv.sh
 ### Input File Preparation: Convert PDB → HLT format
 to create the framework, input should be a Chothia-formatted pdb, for example:
 ```bash
-poetry run python /home/scripts/util/chothia2HLT.py /home/scripts/examples/example_inputs/9dpe_chothia.pdb -o /home/scripts/examples/example_inputs/9dpe_ab_HLT.pdb -H H -L L
+poetry run python /opt/RFantibody/scripts/util/chothia2HLT.py /opt/RFantibody/scripts/examples/example_inputs/9dpe_chothia.pdb -o /opt/RFantibody/scripts/examples/example_inputs/9dpe_ab_HLT.pdb -H H -L L
 ```
 to create the target:
 ```bash
-poetry run python /home/scripts/util/chothia2HLT.py /home/scripts/examples/example_inputs/9dpe_chothia.pdb -o /home/scripts/examples/example_inputs/9dpe_target_HLT.pdb -T A
+poetry run python /opt/RFantibody/scripts/util/chothia2HLT.py /opt/RFantibody/scripts/examples/example_inputs/9dpe_chothia.pdb -o /opt/RFantibody/scripts/examples/example_inputs/9dpe_target_HLT.pdb -T A
 ```
 there are additional options related to cropping the input, see it with 
 ```bash
-poetry run python /home/scripts/util/chothia2HLT.py -h
+poetry run python /opt/RFantibody/scripts/util/chothia2HLT.py -h
 ``` 
 
 ### RFdiffusion (backbone design)
 In the container you can run first the backbone design. There are several parameters, you can see them with
 ```bash
-poetry run python /home/scripts/rfdiffusion_inference.py -h
+poetry run python /opt/RFantibody/scripts/rfdiffusion_inference.py -h
 ```
 and you can override them. **ONLY OVERRIDE, if you know, what you are doing!**
 
 Example:
 
 ```bash
-poetry run python /home/scripts/rfdiffusion_inference.py --config-name antibody     antibody.target_pdb=/home/scripts/examples/example_inputs/rsv_site3.pdb antibody.framework_pdb=/home/scripts/examples/example_inputs/hu-4D5-8_Fv.pdb inference.ckpt_override_path=/home/weights/RFdiffusion_Ab.pt 'ppi.hotspot_res=[T305,T456]'     'antibody.design_loops=[L1:8-13,L2:7,L3:9-11,H1:7,H2:6,H3:5-13]' inference.num_designs=10   inference.output_prefix=/home/scripts/examples/example_outputs/ab_des
+poetry run python /opt/RFantibody/scripts/rfdiffusion_inference.py --config-name antibody     antibody.target_pdb=/opt/RFantibody/scripts/examples/example_inputs/rsv_site3.pdb antibody.framework_pdb=/opt/RFantibody/scripts/examples/example_inputs/hu-4D5-8_Fv.pdb inference.ckpt_override_path=/opt/RFantibody/weights/RFdiffusion_Ab.pt 'ppi.hotspot_res=[T305,T456]'     'antibody.design_loops=[L1:8-13,L2:7,L3:9-11,H1:7,H2:6,H3:5-13]' inference.num_designs=10   inference.output_prefix=/opt/RFantibody/scripts/examples/example_outputs/ab_des
 ```
 
 ### ProteinMPNN (sequence design)
@@ -94,7 +94,7 @@ After the backbone design you can design sequence for the loops with ProteinMPNN
 Example:
 
 ```bash
-poetry run python /home/scripts/proteinmpnn_interface_design.py -pdbdir /home/scripts/examples/example_outputs/ -outpdbdir /home/scripts/examples/example_outputs/pmpnn
+poetry run python /opt/RFantibody/scripts/proteinmpnn_interface_design.py -pdbdir /opt/RFantibody/scripts/examples/example_outputs/ -outpdbdir /opt/RFantibody/scripts/examples/example_outputs/pmpnn
 ```
 
 Other useful flags:
@@ -104,20 +104,20 @@ Other useful flags:
 
 See all the parameters with
 ```bash
-poetry run python /home/scripts/proteinmpnn_interface_design.py -h
+poetry run python /opt/RFantibody/scripts/proteinmpnn_interface_design.py -h
 ```
 
 ### RF2 (structure prediction and filtering)
 After the sequence design the structures can be filtered with RF2. The scores can be found at the end of the pdb files.
 
 ```bash
-poetry run python /home/scripts/rf2_predict.py input.pdb_dir=/home/scripts/examples/example_outputs/pmpnn output.pdb_dir=/home/scripts/examples/example_outputs/rf2
+poetry run python /opt/RFantibody/scripts/rf2_predict.py input.pdb_dir=/opt/RFantibody/scripts/examples/example_outputs/pmpnn output.pdb_dir=/opt/RFantibody/scripts/examples/example_outputs/rf2
 ```
 
 There are additional parameters, see it with
 
 ```bash
-poetry run python /home/scripts/rf2_predict.py -h
+poetry run python /opt/RFantibody/scripts/rf2_predict.py -h
 ```
 
 ## Modified Scripts Summary
@@ -129,7 +129,7 @@ poetry run python /home/scripts/rf2_predict.py -h
 | `scripts/proteinmpnn_interface_design.py` | Detection of existing output files (check.point fix), adding new arguments for name_tag and seed|
 | `src/rfantibody/proteinmpnn/struct_manager.py` | Detection of existing output files (check.point fix) |
 | `src/rfantibody/util/pose.py` |  Fixing shifted sequence prediction windows bug for ProteinMPNN|
-| `src/rfantibody/rf2/config/base.yaml` | changing model.model_weights to the supplied model: /home/weights/RF2_ab.pt |
+| `src/rfantibody/rf2/config/base.yaml` | changing model.model_weights to the supplied model: /opt/RFantibody/weights/RF2_ab.pt |
 | `src/rfantibody/rf2/modules/model_runner.py ` | output directory created if not exists |
 | `setenv.sh` | Adds readable bash prompt in container |
 | `Dockerfile` | Activates venv using `ENTRYPOINT` fix |

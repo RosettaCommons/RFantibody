@@ -16,9 +16,10 @@ ENV PATH="/opt/venv/bin:$PATH"
 RUN pip install poetry
 
 # Set the working directory to the user's home directory
-WORKDIR /home
+# WORKDIR /home
+WORKDIR /opt/RFantibody
 
-ENV PYTHONPATH="/home/src:/home/src/rfantibody/rfdiffusion"
+ENV PYTHONPATH="/opt/RFantibody/src:/opt/RFantibody/src/rfantibody/rfdiffusion"
 ENV DGLBACKEND="pytorch"
 
 # ENTRYPOINT /bin/bash  # this did not activate the environment, which was setup 
