@@ -141,6 +141,7 @@ class AbPredictor(Predictor):
 
         pred_lddt = output_i["pred_lddt"].to(device)
         logits_pae = output_i["logits_pae"].to(device)
+        p_bind = output_i["p_bind"].to(device)
 
         pred_lddt = (
             nn.Softmax(dim=1)(pred_lddt)
@@ -152,6 +153,7 @@ class AbPredictor(Predictor):
         metrics["interaction_pae"] = interaction_pae
         metrics["pae"] = pae
         metrics["pred_lddt"] = pred_lddt
+        metrics["p_bind"] = p_bind
 
 def get_rmsds(pose1: Pose, pose2: Pose, metrics: dict) -> None:
     """
