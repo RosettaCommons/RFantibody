@@ -1,0 +1,32 @@
+Bootstrap: docker
+From: nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
+
+%labels
+    Author hegelab
+    Description RFantibody + CUDA 11.8 + cuDNN 8 on Ubuntu 22.04
+
+%environment
+    export VIRTUAL_ENV=/opt/venv
+    export PATH="$VIRTUAL_ENV/bin:$PATH"
+    export PYTHONUNBUFFERED=1
+    export PYTHONPATH="/opt/RFantibody/src:/opt/RFantibody/src/rfantibody/rfdiffusion"
+    export HOME=/opt/RFantibody
+    export DGLBACKEND="pytorch"
+
+%post
+    export DEBIAN_FRONTEND=noninteractive
+
+    apt-get update && apt-get install -y --no-install-recommends \
+        python3.10 python3-pip python3-venv pipx vim make wget \
+        git build-essential curl unzip \
+        libglib2.0-0 libxext6 libsm6 libxrender1 \
+        && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+%runscript
+    export HOME=/opt/RFantibody
+    cd $HOME
+    echo "Container ready. Using /opt/RFantibody as working directory."
+    echo "Activating RFantibody venv in ./venv"
+    . ./venv/bin/activate
+    exec "$@"
+    

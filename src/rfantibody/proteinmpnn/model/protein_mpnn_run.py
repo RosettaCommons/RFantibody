@@ -446,7 +446,7 @@ if __name__ == "__main__":
     argparser.add_argument("--max_length", type=int, default=200000, help="Max sequence length")
     argparser.add_argument("--sampling_temp", type=str, default="0.1", help="A string of temperatures, 0.2 0.25 0.5. Sampling temperature for amino acids. Suggested values 0.1, 0.15, 0.2, 0.25, 0.3. Higher values will lead to more diversity.")
     
-    argparser.add_argument("--out_folder", type=str, help="Path to a folder to output sequences, e.g. /home/out/")
+    argparser.add_argument("--out_folder", type=str, help="Path to a folder to output sequences, e.g. /opt/RFantibody/out/")
     argparser.add_argument("--pdb_path", type=str, default='', help="Path to a single PDB to be designed")
     argparser.add_argument("--pdb_path_chains", type=str, default='', help="Define which chains need to be designed for a single PDB ")
     argparser.add_argument("--jsonl_path", type=str, help="Path to a folder with parsed pdb into jsonl")

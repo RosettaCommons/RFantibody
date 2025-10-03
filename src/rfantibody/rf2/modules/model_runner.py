@@ -3,6 +3,7 @@ from collections import OrderedDict
 import copy
 
 import torch
+import os
 import torch.nn as nn
 
 from omegaconf import OmegaConf
@@ -199,4 +200,17 @@ def write_output(to_write: OrderedDict, tag: str, conf: HydraConfig) -> None:
             pdblines=[f'QV_{line}' if line.startswith('SCORE') else line for line in pdblines]
             output_quiver.add_pdb(pdblines, tag=f'{tag}_{suffix}')
         else:
+            if not os.path.isdir(conf.output.pdb_dir):
+                dirtree = conf.output.pdb_dir.strip().split('/')
+                if conf.output.pdb_dir.strip()[0] == '/':  # absolute path
+                    adir = ''
+                else:
+                    adir = '.'  # relative path from the present directory 
+                for i in range(len(dirtree)):
+                    if dirtree[i] != '':
+                        adir = f"{adir}/{dirtree[i]}"
+                        if not os.path.isdir(adir):
+                            os.mkdir(adir)
+                            print(f"Directory {adir} created")
+                         
             pu.pdblines_to_pdb(pdblines, f'{conf.output.pdb_dir}/{tag}_{suffix}.pdb')

@@ -42,7 +42,7 @@ def make_deterministic(seed=0):
         np.random.seed(seed)
         random.seed(seed)
 
-@hydra.main(version_base=None, config_path='config/inference', config_name='base')
+@hydra.main(version_base=None, config_path='/opt/RFantibody/src/rfantibody/rfdiffusion/config/inference', config_name='base')
 def main(conf: HydraConfig) -> None:
     log = logging.getLogger(__name__)
     if conf.inference.deterministic:
@@ -266,7 +266,8 @@ def main(conf: HydraConfig) -> None:
                 )
 
                 with open(out, 'w') as f_out:
-                    f_out.write('\n'.join(pdblines))
+                    # f_out.write('\n'.join(pdblines))  # this produced an empty lin after each line
+                    f_out.write(''.join(pdblines))
 
             else:
                 # Add to Quiver file

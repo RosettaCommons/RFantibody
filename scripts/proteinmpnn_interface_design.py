@@ -5,6 +5,7 @@ import argparse
 import time
 
 import torch
+import numpy as np
 
 import rfantibody.proteinmpnn.util_protein_mpnn as mpnn_util
 from rfantibody.proteinmpnn.struct_manager import StructManager
@@ -40,7 +41,7 @@ parser.add_argument("-seqs_per_struct", type=int, default="1",
                     help="The number of sequences to generate for each structure (default: 1)")
 
 # ProteinMPNN Specific Arguments
-default_ckpt = os.path.join( os.path.dirname(__file__), '/home/weights/ProteinMPNN_v48_noise_0.2.pt')
+default_ckpt = os.path.join( os.path.dirname(__file__), '/opt/RFantibody/weights/ProteinMPNN_v48_noise_0.2.pt')
 parser.add_argument("-checkpoint_path", type=str, default=default_ckpt)
 parser.add_argument("-temperature", type=float, default=0.000001, help='An a3m file containing the MSA of your target')
 parser.add_argument("-augment_eps", type=float, default=0,
@@ -53,17 +54,24 @@ parser.add_argument("-omit_AAs", type=str, default='CX',
 parser.add_argument("-num_connections", type=int, default=48,
                     help='Number of neighbors each residue is connected to, default 48, higher number leads to ' + \
                          'better interface design but will cost more to run the model.')
+parser.add_argument("-name_tag", type=str, default="dldesign",
+                    help=f'To append after the input file name, default: dldesign')
+parser.add_argument("-seed",  default="",
+                    help='Seed, should be in the 0-999 range, default: random seed')
 
 args = parser.parse_args(sys.argv[1:])
+
+
 
 class ProteinMPNN_runner():
     '''
     This class is designed to run the ProteinMPNN model on a single input. This class handles the loading of the model,
     the loading of the input data, the running of the model, and the processing of the output
     '''
-
+    
     def __init__(self, args, struct_manager):
         self.struct_manager = struct_manager
+        self.outtag = ""
 
         if torch.cuda.is_available():
             print('Found GPU will run ProteinMPNN on GPU')
@@ -84,6 +92,7 @@ class ProteinMPNN_runner():
         self.temperature = args.temperature
         self.seqs_per_struct = args.seqs_per_struct
         self.omit_AAs = [ letter for letter in args.omit_AAs.upper() if letter in list("ARNDCQEGHILKMFPSTWYVX") ]
+        print(f"The following amino acids will be omitted:  {self.omit_AAs}")
 
     def sequence_optimize(self, sample_feats: SampleFeatures) -> list[tuple[str, float]]:
         t0 = time.time()
@@ -128,13 +137,15 @@ class ProteinMPNN_runner():
 
         # Iterate though each seq score pair and thread the sequence onto the pose
         # Then write each pose to a pdb file
-        prefix = f"{sample_feats.tag}_dldesign"
+        prefix = f"{sample_feats.tag}_{args.name_tag}"
+        print("prefix",prefix)
+        print(seqs_scores)
         for idx, (seq, _) in enumerate(seqs_scores): 
             sample_feats.thread_mpnn_seq(seq)
 
-            outtag = f"{prefix}_{idx}"
+            self.outtag = f"{prefix}_{idx}"
 
-            self.struct_manager.dump_pose(sample_feats.pose, outtag)
+            self.struct_manager.dump_pose(sample_feats.pose, self.outtag)
 
     def run_model(self, tag, args):
         t0 = time.time()
@@ -161,6 +172,17 @@ class ProteinMPNN_runner():
 ####### Main #######
 ####################
 
+if args.seed:
+    seed=int(args.seed)
+    if seed < 0 or seed > 999:
+        print("Seed has to be in the 0-999 range, 111 will be used!") 
+    print(f"Seed: {seed} will be used")
+else:
+    seed=int(np.random.randint(0, high=999, size=1, dtype=int)[0])
+    print("Random seed wil be used")
+torch.manual_seed(seed)
+
+
 struct_manager = StructManager(args)
 proteinmpnn_runner = ProteinMPNN_runner(args, struct_manager)
 
@@ -180,7 +202,7 @@ for pdb in struct_manager.iterate():
             print(f"Struct with tag {pdb} failed in {seconds} seconds with error: {sys.exc_info()[0]}")
 
     # We are done with one pdb, record that we finished
-    struct_manager.record_checkpoint(pdb)
+    struct_manager.record_checkpoint(f"{args.outpdbdir}/{proteinmpnn_runner.outtag}.pdb")
     
 
 
