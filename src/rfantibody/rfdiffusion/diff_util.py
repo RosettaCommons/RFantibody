@@ -2,7 +2,7 @@ import torch
 import numpy as np 
 import random 
 
-from chemical import INIT_CRDS
+from rfantibody.rfdiffusion.chemical import INIT_CRDS
 from icecream import ic 
 
 
