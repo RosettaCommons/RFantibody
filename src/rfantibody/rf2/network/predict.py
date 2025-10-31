@@ -203,7 +203,7 @@ class Predictor():
         # define model name
         self.model_weights = model_weights
         if not os.path.exists(model_weights):
-            self.model_weights = os.path.dirname(__file__) + '/' + model_weights
+            self.model_weights = model_weights
 
         self.device = device
         self.active_fn = nn.Softmax(dim=1)

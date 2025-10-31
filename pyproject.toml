@@ -23,7 +23,7 @@ url = "https://download.pytorch.org/whl/cu118"
 priority = "explicit"
 
 [tool.poetry.dependencies]
-python = "3.10.*"
+python = ">=3.10,<3.11.dev0"
 torch = { version="2.3.*", source="pytorch" }
 torchaudio = "*"
 torchvision = "*"
@@ -36,6 +36,7 @@ opt-einsum = "*"
 dgl = { file = "./include/dgl/dgl-2.4.0+cu118-cp310-cp310-manylinux1_x86_64.whl" }
 e3nn = "*"
 pyrsistent = "*"
+biotite = "1.1.*"
 
 [tool.poetry.group.test]
 optional = true

@@ -3,12 +3,12 @@ import os
 import sys
 import torch
 from icecream import ic
-from parsers import chothia_pdb_parser, HLT_pdb_parser
+from rfantibody.rfdiffusion.parsers import chothia_pdb_parser, HLT_pdb_parser
 
-from chemical import INIT_CRDS
+from rfantibody.rfdiffusion.chemical import INIT_CRDS
 import random
-from util import Dotdict
-from inference.utils import parse_pdb
+from rfantibody.rfdiffusion.util import Dotdict
+from rfantibody.rfdiffusion.inference.utils import parse_pdb
 
 def idx2int(idx:str) -> int:
     '''
