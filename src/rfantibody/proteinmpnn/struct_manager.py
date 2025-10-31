@@ -102,13 +102,13 @@ class StructManager():
         Load a pose from either a silent file, pdb file, or quiver file depending on the input arguments
         '''
 
-        if not self.pdb and not self.silent and not self.quiver:
+        if not self.pdb and not self.quiver:
             raise Exception('Neither pdb nor silent nor quiver is set to True. Cannot load pose')
 
         if self.pdb:
             pose = Pose.from_pdb(tag)
         
         if self.quiver:
-            pose = Pose.from_pdblines(self.inquiver.get_pdb(tag))
+            pose = Pose.from_pdblines(self.inquiver.get_pdblines(tag))
 
         return pose
