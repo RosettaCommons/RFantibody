@@ -6,11 +6,11 @@ import numpy as np
 import string
 import os,re
 import random
-import util
+
 import gzip
 
 import pandas as pd
-
+from rfantibody.rfdiffusion import util 
 from rfantibody.rfdiffusion.chemical import aa2num, aa2long
 
 
