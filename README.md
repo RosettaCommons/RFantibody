@@ -100,6 +100,17 @@ This does the following:
 - Use [Python Poetry](https://python-poetry.org) to build the Python environment
 - Build the [USalign](https://github.com/pylelab/USalign) executable
 
+## Production Docker Image
+
+process described above is well suited for development.  However, if you are deploying the RFAntibody pipeline to a production environment, it is better to have a docker image with all dependencies pre-installed.  The `production.Dockerfile` Dockerfile accomplishes this. It builds an image with all dependencies installed.  The RFAntibody source and scripts are installed in `/opt/rfantibody`.
+
+### Building production Docker Image
+
+```
+docker build -t rfantibody-production -f production.Dockerfile .
+```
+
+
 # Usage
 
 ## HLT File Format
