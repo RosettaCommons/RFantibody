@@ -17,19 +17,10 @@ packages = [
 name = "pypi"
 priority = "primary"
 
-[[tool.poetry.source]]
-name = "pytorch"
-url = "https://download.pytorch.org/whl/cu118"
-priority = "explicit"
-
 [tool.poetry.dependencies]
 python = "3.10.*"
-torch = { version="2.3.*", source="pytorch" }
-torchaudio = "*"
-torchvision = "*"
 torch-utils = "*"
 numpy = "1.*"
-cuda-python = "11.8"
 hydra-core = "*"
 icecream = "*"
 opt-einsum = "*"
