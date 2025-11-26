@@ -49,11 +49,11 @@ If this returns a path then you have docker available and are good to go.
 
 ### GPU Acceleration
 
-RFantibody requires an NVIDIA GPU to run. You can check whether you have an NVIDIA GPU available by running:
+RFantibody requires an AMD GPU to run. You can check whether you have an AMD GPU available by running:
 ```
-nvidia-smi
+rocminfo
 ```
-If this command runs successfully then you have an compatible GPU and RFantibody will be able to run on it.
+If this command runs successfully then you have a compatible GPU and RFantibody will be able to run on it.
 
 # Downloading Weights
 
@@ -84,7 +84,7 @@ docker build -t rfantibody .
 ### Start the Docker image
 Run the following command to start the docker container based on the image you just built:
 ```
-docker run --name rfantibody --gpus all -v .:/home --memory 10g -it rfantibody
+docker run --name rfantibody --device=/dev/kfd --device=/dev/dri -v .:/home --memory 10g -it rfantibody
 ```
 This will put you into the RFantibody container at the /home directory which mirrors the directory that you ran the last command from.
 

@@ -33,7 +33,6 @@ cuda-python = "11.8"
 hydra-core = "*"
 icecream = "*"
 opt-einsum = "*"
-dgl = { file = "./include/dgl/dgl-2.4.0+cu118-cp310-cp310-manylinux1_x86_64.whl" }
 e3nn = "*"
 pyrsistent = "*"
 
