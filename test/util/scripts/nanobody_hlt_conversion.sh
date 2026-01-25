@@ -9,16 +9,13 @@ OUTPUT_DIR=${1:-$(pwd)}
 echo "Using output directory: $OUTPUT_DIR"
 
 # Use test inputs directory
-INPUT_DIR="/home/tests/util/inputs_for_test"
+INPUT_DIR="/home/test/util/inputs_for_test"
 
-# Convert the antibody file
-echo "Converting antibody file..."
+# Convert the nanobody file
+echo "Converting nanobody file..."
 python /home/scripts/util/chothia2HLT.py \
-  "${INPUT_DIR}/6mh2_chothia.pdb" \
-  --heavy D \
-  --light C \
-  --Hcrop 113 \
-  --Lcrop 107 \
-  --output "${OUTPUT_DIR}/antibody_HLT.pdb"
+  "${INPUT_DIR}/3eak_chothia.pdb" \
+  --heavy B \
+  --output "${OUTPUT_DIR}/nanobody_HLT.pdb"
 
 echo "HLT conversion completed."

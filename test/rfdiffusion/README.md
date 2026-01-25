@@ -21,23 +21,23 @@ To run the RFdiffusion tests, use the run_tests.py script from the parent direct
 
 ```bash
 # Run all tests (each script runs separately as a parameterized test)
-./tests/run_tests.py --module rfdiffusion
+uv run python -m test.run_tests --module rfdiffusion
 
 # Run tests with verbose output
-./tests/run_tests.py --module rfdiffusion -v
+uv run python -m test.run_tests --module rfdiffusion -v
 
 # Keep output files for inspection
-./tests/run_tests.py --module rfdiffusion --keep-outputs
+uv run python -m test.run_tests --module rfdiffusion --keep-outputs
 ```
 
-By default, tests now use a temporary directory for outputs that is automatically cleaned up when tests complete. Use the `--keep-outputs` flag if you want to inspect the output files after the tests run. When using this flag, outputs will be stored in the `tests/rfdiffusion/example_outputs` directory.
+By default, tests now use a temporary directory for outputs that is automatically cleaned up when tests complete. Use the `--keep-outputs` flag if you want to inspect the output files after the tests run. When using this flag, outputs will be stored in the `test/rfdiffusion/example_outputs` directory.
 
 ### Creating Reference Files
 
 If you need to create or update the reference files:
 
 ```bash
-./tests/run_tests.py --module rfdiffusion --create-refs
+uv run python -m test.run_tests --module rfdiffusion --create-refs
 ```
 
 This will run all the example scripts and copy their outputs to the appropriate reference output directory based on the GPU being used.
@@ -66,7 +66,7 @@ The following scripts are tested independently through parametrization:
 
 The test suite now generates detailed individual reports:
 
-- Each test produces a report file in `tests/rfdiffusion/reports/`
+- Each test produces a report file in `test/rfdiffusion/reports/`
 - Report format: `[script_name]_report.txt` (e.g., `antibody_pdbdesign_report.txt`)
 - Reports include:
   - Test status (passed/failed)

@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 
 """
-Pytest configuration file for RFDiffusion tests.
+Pytest configuration file for RF2 tests.
 """
 
 import os
 import shutil
-import tempfile
 
 import pytest
 import torch
@@ -45,16 +44,17 @@ def output_dir(request):
     
     if keep_outputs:
         # Use a dedicated path in the module test directory for inspection
-        output_path = "tests/rfdiffusion/example_outputs"
+        output_path = "test/rf2/example_outputs"
         os.makedirs(output_path, exist_ok=True)
         return output_path
     else:
         # Create a temporary directory that will be automatically cleaned up
         # We need to keep a reference to temp_dir object so it's not garbage collected
-        temp_dir = tempfile.TemporaryDirectory(prefix="rfantibody_test_")
+        import tempfile
+        temp_dir = tempfile.TemporaryDirectory(prefix="rfantibody_rf2_test_")
         # Add the temp_dir object as an attribute of the request.config
         # to ensure it stays in scope until the end of testing
-        request.config._rfantibody_temp_dir = temp_dir
+        request.config._rfantibody_rf2_temp_dir = temp_dir
         return temp_dir.name
 
 
@@ -65,7 +65,7 @@ def ref_dir():
     
     Uses GPU-specific references when running on a supported GPU (A4000 or H100).
     """
-    base_ref_dir = "tests/rfdiffusion/reference_outputs"
+    base_ref_dir = "test/rf2/reference_outputs"
     
     # Check which GPU we're running on
     if torch.cuda.is_available():
@@ -98,4 +98,4 @@ def clean_output_dir(output_dir):
     yield
     
     # By default, temporary directories are automatically cleaned up
-    # If using fixed path (--keep-outputs), we leave files for inspection 
+    # If using fixed path (--keep-outputs), we leave files for inspection

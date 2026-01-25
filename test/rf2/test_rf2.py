@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.rfdiffusion.rfab_test_utils import compare_files, create_test_report, run_command
+from test.rfdiffusion.rfab_test_utils import compare_files, create_test_report, run_command
 
 # Test script configurations
 SCRIPT_CONFIGS = {
@@ -25,7 +25,7 @@ SCRIPT_CONFIGS = {
 }
 
 # Path to test scripts
-TEST_SCRIPT_DIR = "tests/rf2/scripts"
+TEST_SCRIPT_DIR = "test/rf2/scripts"
 
 
 @pytest.mark.parametrize("script_name", list(SCRIPT_CONFIGS.keys()))
@@ -141,14 +141,14 @@ def test_all_scripts_as_suite(clean_output_dir, output_dir, ref_dir):
         }
     
     # Create a report
-    create_test_report(results, "tests/rf2/test_report.txt")
+    create_test_report(results, "test/rf2/test_report.txt")
     
     # The test should pass if all scripts passed
     all_passed = all(result['passed'] for result in results.values())
     if not all_passed:
         failed_scripts = [script for script, result in results.items() if not result['passed']]
-        pytest.fail(f"Tests failed for scripts: {', '.join(failed_scripts)}. See tests/rf2/test_report.txt for details.")
+        pytest.fail(f"Tests failed for scripts: {', '.join(failed_scripts)}. See test/rf2/test_report.txt for details.")
 
 
 if __name__ == "__main__":
-    pytest.main(["-v", "tests/rf2/test_rf2.py"])
+    pytest.main(["-v", "test/rf2/test_rf2.py"])

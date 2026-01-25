@@ -19,7 +19,7 @@ dependencies = [
     "icecream",
     "opt-einsum",
     "biotite>=0.38.0",
-    "dgl @ file:./include/dgl/dgl-2.4.0+cu118-cp310-cp310-manylinux1_x86_64.whl",
+    "dgl",
     "e3nn",
     "pyrsistent",
 ]
@@ -35,6 +35,7 @@ test = [
 torch = { index = "pytorch" }
 torchaudio = { index = "pytorch" }
 torchvision = { index = "pytorch" }
+dgl = { path = "include/dgl/dgl-2.4.0+cu118-cp310-cp310-manylinux1_x86_64.whl" }
 
 [[tool.uv.index]]
 name = "pytorch"
@@ -46,7 +47,11 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/rfantibody", "include", "include/SE3Transformer/se3_transformer", "tests"]
+packages = [
+    "src/rfantibody",
+    "include/SE3Transformer/se3_transformer",
+    "test",
+]
 
 [tool.isort]
 profile = "black"

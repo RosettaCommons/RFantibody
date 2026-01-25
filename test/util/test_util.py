@@ -32,7 +32,7 @@ SCRIPT_CONFIGS = {
 
 
 # Path to test scripts
-TEST_SCRIPT_DIR = "tests/util/scripts"
+TEST_SCRIPT_DIR = "test/util/scripts"
 
 
 @pytest.mark.parametrize("script_name", SCRIPT_CONFIGS.keys())
@@ -54,7 +54,7 @@ def test_util_script(script_name, clean_output_dir, output_dir, ref_dir):
     print(f"\n\nTesting: {script_name} - {description}")
     
     # Create a report file for this specific test
-    report_file = f"tests/util/reports/{os.path.splitext(script_name)[0]}_report.txt"
+    report_file = f"test/util/reports/{os.path.splitext(script_name)[0]}_report.txt"
     os.makedirs(os.path.dirname(report_file), exist_ok=True)
     
     results = {}
@@ -141,4 +141,4 @@ def test_util_script(script_name, clean_output_dir, output_dir, ref_dir):
 
 
 if __name__ == "__main__":
-    pytest.main(["-v", "tests/util/test_util.py"])
+    pytest.main(["-v", "test/util/test_util.py"])

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Pytest configuration file for RF2 tests.
+Pytest configuration file for ProteinMPNN tests.
 """
 
 import os
@@ -44,17 +44,17 @@ def output_dir(request):
     
     if keep_outputs:
         # Use a dedicated path in the module test directory for inspection
-        output_path = "tests/rf2/example_outputs"
+        output_path = "test/proteinmpnn/example_outputs"
         os.makedirs(output_path, exist_ok=True)
         return output_path
     else:
         # Create a temporary directory that will be automatically cleaned up
         # We need to keep a reference to temp_dir object so it's not garbage collected
         import tempfile
-        temp_dir = tempfile.TemporaryDirectory(prefix="rfantibody_rf2_test_")
+        temp_dir = tempfile.TemporaryDirectory(prefix="rfantibody_proteinmpnn_test_")
         # Add the temp_dir object as an attribute of the request.config
         # to ensure it stays in scope until the end of testing
-        request.config._rfantibody_rf2_temp_dir = temp_dir
+        request.config._rfantibody_proteinmpnn_temp_dir = temp_dir
         return temp_dir.name
 
 
@@ -65,7 +65,7 @@ def ref_dir():
     
     Uses GPU-specific references when running on a supported GPU (A4000 or H100).
     """
-    base_ref_dir = "tests/rf2/reference_outputs"
+    base_ref_dir = "test/proteinmpnn/reference_outputs"
     
     # Check which GPU we're running on
     if torch.cuda.is_available():

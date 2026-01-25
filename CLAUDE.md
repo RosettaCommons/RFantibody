@@ -4,7 +4,7 @@
 - Build/setup: `bash include/setup.sh`
 - Install dependencies: `uv sync` (or `uv sync --all-extras` to include test dependencies)
 - Add a dependency: `uv add <package>`
-- Run tests: `uv run python tests/run_test_suite.py`
+- Run tests: `uv run python -m test.run_tests`
 - Run a specific example: `bash scripts/examples/[path/to/example].sh`
 - Docker build: `docker build -t rfantibody .`
 - Docker run: `docker run --name rfantibody --gpus all -v .:/home --memory 10g -it rfantibody`
@@ -59,8 +59,8 @@
 - Updated test infrastructure to use temporary directories for test outputs
 - Added --keep-outputs flag to optionally preserve test outputs for inspection
 - Optimized test output management: by default, tests now use automatically cleaned temporary directories, improving efficiency while still allowing output inspection when needed via the --keep-outputs flag
-- Moved test outputs to module-specific output directories (tests/rfdiffusion/example_outputs) for better organization
-- Restructured test directory: moved RFdiffusion tests to tests/rfdiffusion/ subdirectory to enable future test modules
+- Moved test outputs to module-specific output directories (test/rfdiffusion/example_outputs) for better organization
+- Restructured test directory: moved RFdiffusion tests to test/rfdiffusion/ subdirectory to enable future test modules
 - Implemented proper test module organization with __init__.py files and clear directory structure
 - Updated path references in test scripts and runners to work with new directory structure
 - Improved test output organization with module-specific example_outputs directories

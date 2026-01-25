@@ -5,9 +5,9 @@ set -e
 
 echo "Running isort to organize imports..."
 
-# Use poetry to run isort
-poetry run isort src/
-poetry run isort scripts/
-poetry run isort tests/
+# Use uv to run isort
+uv run isort src/
+uv run isort scripts/
+uv run isort test/
 
 echo "Import formatting complete\!"

@@ -24,7 +24,7 @@ def output_dir(request):
     
     if keep_outputs:
         # Use a dedicated path in the module test directory for inspection
-        output_path = "tests/util/example_outputs"
+        output_path = "test/util/example_outputs"
         os.makedirs(output_path, exist_ok=True)
         return output_path
     else:
@@ -40,7 +40,7 @@ def output_dir(request):
 @pytest.fixture(scope="session")
 def ref_dir():
     """Provide the reference directory path."""
-    return "tests/util/reference_outputs"
+    return "test/util/reference_outputs"
 
 
 @pytest.fixture(scope="session")

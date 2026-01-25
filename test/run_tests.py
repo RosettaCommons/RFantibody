@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from tests.rfdiffusion.rfab_test_utils import copy_reference_files
+from test.rfdiffusion.rfab_test_utils import copy_reference_files
 
 
 def main():
@@ -119,14 +119,14 @@ def main():
         print(f"\nRunning {module} tests...")
         
         # Configure pytest arguments
-        pytest_args = ["-xvs", f"tests/{module}/test_{module}.py"]
+        pytest_args = ["-xvs", f"test/{module}/test_{module}.py"]
             
         if args.verbose:
             pytest_args.append("-v")
         
         # Pass through the keep-outputs flag to pytest
         if args.keep_outputs:
-            print(f"Using tests/{module}/example_outputs directory (outputs will be kept)")
+            print(f"Using test/{module}/example_outputs directory (outputs will be kept)")
             pytest_args.append("--keep-outputs")
         else:
             print("Using temporary directory for outputs (will be cleaned up after tests)")
