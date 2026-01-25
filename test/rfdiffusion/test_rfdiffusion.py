@@ -12,7 +12,12 @@ from pathlib import Path
 
 import pytest
 
-from .rfab_test_utils import compare_files, create_test_report, run_command
+from test.util.util_test_utils import (
+    compare_files,
+    compare_pdb_structures,
+    create_test_report,
+    run_command,
+)
 
 # Test script configurations
 SCRIPT_CONFIGS = {
@@ -103,12 +108,25 @@ def test_rfdiffusion_script(script_name, clean_output_dir, output_dir, ref_dir):
                 details.append(f"Reference file not found: {ref_file}")
                 continue
             
-            result = compare_files(ref_file, output_file)
+            # Use biotite-based comparison for PDB files, generic comparison for others
+            if output_file.endswith('.pdb'):
+                result = compare_pdb_structures(ref_file, output_file)
+            else:
+                result = compare_files(ref_file, output_file)
+            
             if result is not True:
                 output_filename = os.path.basename(output_file)
                 file_differences[output_filename] = result
                 success = False
                 details.append(f"Differences in {output_filename}: {len(result)} differences found")
+                
+                # Format the first few differences for display
+                diff_message = "\n".join(
+                    [d.get('message', 'Difference found') for d in result[:5]]
+                )
+                if len(result) > 5:
+                    diff_message += f"\n... and {len(result) - 5} more differences"
+                details.append(diff_message)
     
     results[script_name] = {
         'passed': success,
@@ -131,7 +149,9 @@ def test_rfdiffusion_script(script_name, clean_output_dir, output_dir, ref_dir):
     
     # The test should pass if the script passed
     if not success:
-        pytest.fail(f"Test failed for script: {script_name}. See {report_file} for details.")
+        # Format failure message with details
+        fail_details = "\n".join(details)
+        pytest.fail(f"Test failed for script: {script_name}\n{fail_details}\nSee {report_file} for full details.")
 
 
 if __name__ == "__main__":

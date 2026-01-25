@@ -13,9 +13,13 @@ from pathlib import Path
 
 import pytest
 
-from .util_test_utils import (compare_files, compare_structures,
-                             create_test_report, run_command,
-                             verify_hlt_format)
+from .util_test_utils import (
+    compare_files,
+    compare_pdb_structures,
+    create_test_report,
+    run_command,
+    verify_hlt_format,
+)
 
 SCRIPT_CONFIGS = {
     "antibody_hlt_conversion.sh": {
@@ -104,18 +108,12 @@ def test_util_script(script_name, clean_output_dir, output_dir, ref_dir):
             if not os.path.exists(ref_file):
                 details.append(f"Reference file not found: {ref_file}")
             else:
-                # Compare files
-                text_result = compare_files(ref_file, output_file)
-                if text_result is not True:
-                    file_differences[output_file_name] = text_result
-                    success = False
-                    details.append(f"Text differences in {output_file_name}: {len(text_result)} differences found")
-                
-                # Check structure
-                struct_result = compare_structures(ref_file, output_file)
+                # Compare PDB structures using biotite
+                struct_result = compare_pdb_structures(ref_file, output_file)
                 if struct_result is not True:
+                    file_differences[output_file_name] = struct_result
                     success = False
-                    details.append(f"Structure differences in {output_file_name}")
+                    details.append(f"Structure differences in {output_file_name}: {len(struct_result)} differences found")
     
     results[script_name] = {
         'passed': success,

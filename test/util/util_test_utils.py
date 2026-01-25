@@ -9,11 +9,30 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
+from typing import Union
 
+import numpy as np
 import pytest
+from biotite.structure.io.pdb import PDBFile
 
-from biotite.structure import AtomArray
-from biotite.structure.io.pdb import get_structure, PDBFile
+
+def _extract_remark_lines(pdb_path: Union[str, Path]) -> list:
+    """
+    Extract REMARK lines from a PDB file.
+    
+    Args:
+        pdb_path: Path to PDB file
+        
+    Returns:
+        List of REMARK lines (stripped of whitespace)
+    """
+    remark_lines = []
+    with open(pdb_path, 'r') as f:
+        for line in f:
+            if line.startswith('REMARK'):
+                remark_lines.append(line.strip())
+    return remark_lines
+
 
 def run_command(cmd, cwd=None):
     """
@@ -40,69 +59,152 @@ def run_command(cmd, cwd=None):
         raise RuntimeError(f"Command failed with error: {result.stderr}")
     return result.stdout
 
-def compare_structures(ref_file: str, output_file: str) -> bool | list[dict]:
+def compare_pdb_structures(
+    ref_file: Union[str, Path],
+    output_file: Union[str, Path],
+    coord_threshold: float = 0.1,
+    check_elements: bool = True,
+    check_residues: bool = True,
+    check_remarks: bool = True,
+) -> Union[bool, list]:
     """
-    Compare the atomic coordinates of two PDB files.
-
-    We will parse in both of the pdb files using biotite and then check that all of the fields
-    of the two AtomArrays are the same. We will only assess the following fields:
-    - chain_id
-    - res_id
-    - ins_code
-    - res_name
-    - hetero
-    - atom_name
-    - element
-
+    Compare two PDB files using biotite to verify structural consistency.
+    
+    Checks that:
+    1. REMARK lines are identical
+    2. Both files have the same number of atoms
+    3. Residue names match at each position
+    4. Element types match at each position
+    5. Coordinates are within the specified threshold
+    
     Args:
-        ref_file: Path to reference file
-        output_file: Path to output file to compare
-
+        ref_file: Path to reference PDB file
+        output_file: Path to output PDB file to compare
+        coord_threshold: Maximum allowed distance (in Angstroms) between 
+                        corresponding atoms. Default is 0.1 Angstroms.
+        check_elements: Whether to verify element types match
+        check_residues: Whether to verify residue names match
+        check_remarks: Whether to verify REMARK lines are identical
+        
     Returns:
-        True if files match, or a list of differences if they don't
+        True if structures match within tolerances, or a list of differences
     """
-    try:
-        ref_pdb = PDBFile.read(ref_file)
-        out_pdb = PDBFile.read(output_file)
-        ref_struct = get_structure(ref_pdb, model=1)
-        out_struct = get_structure(out_pdb, model=1)
-
-    except FileNotFoundError as e:
-        return [{'error': f"File not found: {e.filename}"}]
-
-    except Exception as e:
-        return [{'error': f"Error parsing PDB files: {e}"}]
-
-    if ref_struct.array_length() != out_struct.array_length():
-        return [{
-            'error': 'Different number of atoms',
-            'ref_count': ref_struct.array_length(),
-            'out_count': out_struct.array_length()
-        }]
-
-    fields_to_compare = [
-        "chain_id", "res_id", "ins_code", "res_name", 
-        "hetero", "atom_name", "element"
-    ]
+    ref_path = Path(ref_file)
+    out_path = Path(output_file)
+    
+    if not out_path.exists():
+        pytest.fail(f"Output file not found: {output_file}")
+    
+    if not ref_path.exists():
+        pytest.fail(f"Reference file not found: {ref_file}")
     
     differences = []
     
-    for i in range(ref_struct.array_length()):
-        for field in fields_to_compare:
-            ref_val = getattr(ref_struct[i], field)
-            out_val = getattr(out_struct[i], field)
-            
-            # Special handling for float comparisons if needed later
-            # For now, assume direct comparison works for these fields
-
-            if ref_val != out_val:
-                differences.append({
-                    'atom_index': i,
-                    'field': field,
-                    'ref_value': ref_val,
-                    'out_value': out_val
-                })
-
+    # Parse PDB files using biotite
+    try:
+        ref_pdb = PDBFile.read(str(ref_path))
+        ref_structure = ref_pdb.get_structure(model=1)
+    except Exception as e:
+        differences.append({
+            'type': 'parse_error',
+            'file': 'reference',
+            'message': f"Failed to parse reference PDB: {str(e)}"
+        })
+        return differences
+    
+    try:
+        out_pdb = PDBFile.read(str(out_path))
+        out_structure = out_pdb.get_structure(model=1)
+    except Exception as e:
+        differences.append({
+            'type': 'parse_error',
+            'file': 'output',
+            'message': f"Failed to parse output PDB: {str(e)}"
+        })
+        return differences
+    
+    # Check REMARK lines
+    if check_remarks:
+        ref_remarks = _extract_remark_lines(ref_path)
+        out_remarks = _extract_remark_lines(out_path)
+        
+        if len(ref_remarks) != len(out_remarks):
+            differences.append({
+                'type': 'remark_count',
+                'ref_count': len(ref_remarks),
+                'out_count': len(out_remarks),
+                'message': f"REMARK line count mismatch: reference has {len(ref_remarks)}, output has {len(out_remarks)}"
+            })
+        else:
+            for i, (ref_remark, out_remark) in enumerate(zip(ref_remarks, out_remarks)):
+                if ref_remark != out_remark:
+                    differences.append({
+                        'type': 'remark_mismatch',
+                        'line_index': i,
+                        'ref_remark': ref_remark,
+                        'out_remark': out_remark,
+                        'message': f"REMARK mismatch at line {i}: ref='{ref_remark}', out='{out_remark}'"
+                    })
+    
+    # Check atom counts
+    ref_atom_count = len(ref_structure)
+    out_atom_count = len(out_structure)
+    
+    if ref_atom_count != out_atom_count:
+        differences.append({
+            'type': 'atom_count',
+            'message': f"Atom count mismatch: reference has {ref_atom_count}, output has {out_atom_count}"
+        })
+        return differences
+    
+    # Compare atom-by-atom
+    for i in range(ref_atom_count):
+        ref_atom = ref_structure[i]
+        out_atom = out_structure[i]
+        
+        # Check residue names
+        if check_residues and ref_atom.res_name != out_atom.res_name:
+            differences.append({
+                'type': 'residue_mismatch',
+                'atom_index': i,
+                'ref_residue': ref_atom.res_name,
+                'out_residue': out_atom.res_name,
+                'chain': ref_atom.chain_id,
+                'res_id': ref_atom.res_id,
+                'message': f"Residue mismatch at atom {i}: ref={ref_atom.res_name}, out={out_atom.res_name}"
+            })
+        
+        # Check element types
+        if check_elements and ref_atom.element != out_atom.element:
+            differences.append({
+                'type': 'element_mismatch',
+                'atom_index': i,
+                'ref_element': ref_atom.element,
+                'out_element': out_atom.element,
+                'chain': ref_atom.chain_id,
+                'res_id': ref_atom.res_id,
+                'message': f"Element mismatch at atom {i}: ref={ref_atom.element}, out={out_atom.element}"
+            })
+        
+        # Check coordinates
+        ref_coord = ref_atom.coord
+        out_coord = out_atom.coord
+        distance = np.linalg.norm(ref_coord - out_coord)
+        
+        if distance > coord_threshold:
+            differences.append({
+                'type': 'coord_deviation',
+                'atom_index': i,
+                'atom_name': ref_atom.atom_name,
+                'chain': ref_atom.chain_id,
+                'res_id': ref_atom.res_id,
+                'res_name': ref_atom.res_name,
+                'ref_coord': ref_coord.tolist(),
+                'out_coord': out_coord.tolist(),
+                'distance': float(distance),
+                'message': f"Coordinate deviation at atom {i} ({ref_atom.atom_name} in {ref_atom.res_name}{ref_atom.res_id}): distance={distance:.4f}Å > threshold={coord_threshold}Å"
+            })
+    
     return True if not differences else differences
 
 

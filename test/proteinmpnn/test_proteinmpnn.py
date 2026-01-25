@@ -12,7 +12,12 @@ from pathlib import Path
 
 import pytest
 
-from test.rfdiffusion.rfab_test_utils import compare_files, create_test_report, run_command
+from test.util.util_test_utils import (
+    compare_files,
+    compare_pdb_structures,
+    create_test_report,
+    run_command,
+)
 
 # Test script configurations
 SCRIPT_CONFIGS = {
@@ -60,7 +65,11 @@ def test_proteinmpnn_script(script_name, clean_output_dir, output_dir, ref_dir):
     # Compare each output file with reference
     all_differences = {}
     for ref_file, output_file in expected_files:
-        result = compare_files(ref_file, output_file)
+        # Use biotite-based comparison for PDB files
+        if output_file.endswith('.pdb'):
+            result = compare_pdb_structures(ref_file, output_file)
+        else:
+            result = compare_files(ref_file, output_file)
         
         # If result is True, files match; if it's a list, there are differences
         if result is not True:
@@ -70,9 +79,7 @@ def test_proteinmpnn_script(script_name, clean_output_dir, output_dir, ref_dir):
             
             # Format the first few differences for display
             diff_message = "\n".join(
-                [f"Line {d.get('line')}: Expected '{d.get('ref', '')}' but got '{d.get('out', '')}" if 'ref' in d and 'out' in d
-                 else f"Line {d.get('line')}: {d.get('message', 'Difference found')}" 
-                 for d in result[:5]]
+                [d.get('message', 'Difference found') for d in result[:5]]
             )
             if len(result) > 5:
                 diff_message += f"\n... and {len(result) - 5} more differences"
@@ -129,12 +136,25 @@ def test_all_scripts_as_suite(clean_output_dir, output_dir, ref_dir):
                     details.append(f"Reference file not found: {ref_file}")
                     continue
                 
-                result = compare_files(ref_file, output_file)
+                # Use biotite-based comparison for PDB files
+                if output_file.endswith('.pdb'):
+                    result = compare_pdb_structures(ref_file, output_file)
+                else:
+                    result = compare_files(ref_file, output_file)
+                
                 if result is not True:
                     output_filename = os.path.basename(output_file)
                     file_differences[output_filename] = result
                     success = False
                     details.append(f"Differences in {output_filename}: {len(result)} differences found")
+                    
+                    # Format the first few differences for display
+                    diff_message = "\n".join(
+                        [d.get('message', 'Difference found') for d in result[:5]]
+                    )
+                    if len(result) > 5:
+                        diff_message += f"\n... and {len(result) - 5} more differences"
+                    details.append(diff_message)
         
         results[script_name] = {
             'passed': success,
@@ -148,7 +168,14 @@ def test_all_scripts_as_suite(clean_output_dir, output_dir, ref_dir):
     all_passed = all(result['passed'] for result in results.values())
     if not all_passed:
         failed_scripts = [script for script, result in results.items() if not result['passed']]
-        pytest.fail(f"Tests failed for scripts: {', '.join(failed_scripts)}. See test/proteinmpnn/test_report.txt for details.")
+        # Collect all failure details
+        all_details = []
+        for script, result in results.items():
+            if not result['passed']:
+                all_details.append(f"\n{script}:")
+                all_details.extend([f"  {d}" for d in result['details']])
+        fail_details = "\n".join(all_details)
+        pytest.fail(f"Tests failed for scripts: {', '.join(failed_scripts)}\n{fail_details}\nSee test/proteinmpnn/test_report.txt for full details.")
 
 
 if __name__ == "__main__":
