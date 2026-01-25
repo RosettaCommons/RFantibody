@@ -1,50 +1,52 @@
-[tool.poetry]
+[project]
 name = "rfantibody"
 version = "1.0.0"
 description = ""
-authors = [
-  "Nate Bennett <nrbennett2@gmail.com>",
-  "Joe Watchwell <joe.watchwell@gmail.com>"
-]
 readme = "README.md"
-packages = [
-{include = "rfantibody", from = "src"},
-{include = "include"},
-{include = "se3_transformer", from = "include/SE3Transformer"},
-{include = "tests"}
+requires-python = "==3.10.*"
+authors = [
+    { name = "Nate Bennett", email = "nrbennett2@gmail.com" },
+    { name = "Joe Watchwell", email = "joe.watchwell@gmail.com" }
+]
+dependencies = [
+    "torch==2.3.*",
+    "torchaudio",
+    "torchvision",
+    "torch-utils",
+    "numpy>=1.0,<2.0",
+    "cuda-python==11.8",
+    "hydra-core",
+    "icecream",
+    "opt-einsum",
+    "biotite>=0.38.0",
+    "dgl @ file:./include/dgl/dgl-2.4.0+cu118-cp310-cp310-manylinux1_x86_64.whl",
+    "e3nn",
+    "pyrsistent",
 ]
 
-[[tool.poetry.source]]
-name = "pypi"
-priority = "primary"
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0.0",
+    "pandas",
+    "isort>=5.13.2",
+]
 
-[[tool.poetry.source]]
+[tool.uv.sources]
+torch = { index = "pytorch" }
+torchaudio = { index = "pytorch" }
+torchvision = { index = "pytorch" }
+
+[[tool.uv.index]]
 name = "pytorch"
 url = "https://download.pytorch.org/whl/cu118"
-priority = "explicit"
+explicit = true
 
-[tool.poetry.dependencies]
-python = "3.10.*"
-torch = { version="2.3.*", source="pytorch" }
-torchaudio = "*"
-torchvision = "*"
-torch-utils = "*"
-numpy = "1.*"
-cuda-python = "11.8"
-hydra-core = "*"
-icecream = "*"
-opt-einsum = "*"
-biotite = "^0.38.0"
-dgl = { file = "./include/dgl/dgl-2.4.0+cu118-cp310-cp310-manylinux1_x86_64.whl" }
-e3nn = "*"
-pyrsistent = "*"
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.poetry.group.test]
-
-[tool.poetry.group.test.dependencies]
-pytest = "^8.0.0"
-pandas = "*"
-isort = "^5.13.2"
+[tool.hatch.build.targets.wheel]
+packages = ["src/rfantibody", "include", "include/SE3Transformer/se3_transformer", "tests"]
 
 [tool.isort]
 profile = "black"
@@ -57,4 +59,3 @@ ensure_newline_before_comments = true
 split_on_trailing_comma = true
 sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
 known_first_party = ["rfantibody"]
-

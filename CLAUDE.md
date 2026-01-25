@@ -2,7 +2,9 @@
 
 ## Commands
 - Build/setup: `bash include/setup.sh`
-- Run tests: `python tests/run_test_suite.py`
+- Install dependencies: `uv sync` (or `uv sync --all-extras` to include test dependencies)
+- Add a dependency: `uv add <package>`
+- Run tests: `uv run python tests/run_test_suite.py`
 - Run a specific example: `bash scripts/examples/[path/to/example].sh`
 - Docker build: `docker build -t rfantibody .`
 - Docker run: `docker run --name rfantibody --gpus all -v .:/home --memory 10g -it rfantibody`
@@ -30,6 +32,14 @@
 - The test framework automatically detects GPU type and uses appropriate reference files
 
 ## Development Log
+### 2026-01-25
+- Migrated from Poetry to uv for package management
+- Converted pyproject.toml from [tool.poetry] to PEP 621 [project] format
+- Updated Dockerfile to install uv instead of poetry
+- Updated setup.sh to use `uv sync` instead of `poetry install`
+- Configured explicit PyTorch CUDA 11.8 index for torch packages
+- Switched build backend from poetry to hatchling
+
 ### 2025-04-10
 - Reorganized test input files into module-specific directories
 - Created dedicated inputs_for_test directories for each test module

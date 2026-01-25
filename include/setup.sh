@@ -14,6 +14,6 @@ make &&
 
 # Build the Python package
 cd /home &&
-poetry install &&
+uv sync --all-extras
 
 echo "Setup successful."
