@@ -91,14 +91,16 @@ This will put you into the RFantibody container at the /home directory which mir
 
 
 ## Setup the Python Environment
-From the RFantibody container run the following to setup the python environment:
+From the RFantibody container, navigate to the project root and run:
+```bash
+cd /home
+uv sync --all-extras
 ```
-bash /home/include/setup.sh
-```
-This does the following:
-- Download [Deep Graph Library](https://www.dgl.ai) in preparation of building the python environment
-- Use [Python Poetry](https://python-poetry.org) to build the Python environment
-- Build the [USalign](https://github.com/pylelab/USalign) executable
+This uses [uv](https://docs.astral.sh/uv/) to:
+- Create a virtual environment in `.venv/`
+- Install all dependencies including PyTorch with CUDA 11.8 support
+- Install [Deep Graph Library](https://www.dgl.ai) from CUDA-enabled wheels
+- Install test dependencies (`--all-extras`)
 
 # Usage
 
