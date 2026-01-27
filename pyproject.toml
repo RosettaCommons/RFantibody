@@ -23,12 +23,12 @@ dependencies = [
     "e3nn",
     "pyrsistent",
     "click>=8.0.0",
+    "pandas",
 ]
 
 [project.optional-dependencies]
 test = [
     "pytest>=8.0.0",
-    "pandas",
     "isort>=5.13.2",
 ]
 

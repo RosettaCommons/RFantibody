@@ -13,7 +13,10 @@ The RFantibody pipeline is described in detail in [this preprint](https://www.bi
 
 # Table of Contents
 - [Requirements](#requirements)
+- [Downloading Weights](#downloading-weights)
 - [Installation](#installation)
+  - [Local Installation (Without Docker)](#local-installation-without-docker)
+  - [Docker Installation (Alternative)](#docker-installation-alternative)
 - [Command Line Interface](#command-line-interface)
   - [Inference Commands](#inference-commands)
   - [Quiver Utilities](#quiver-utilities)
@@ -38,73 +41,135 @@ The RFantibody pipeline is described in detail in [this preprint](https://www.bi
 
 # Requirements
 
-### Docker
-
-RFantibody is designed to run in a Docker container. Containers run a seperate operating system on top of the host operating system. This offers the following advantages:
-- Simplified installation: all you need is the Docker software suite
-- Host system-invariance: because this is run inside a container it behaves essentially the same wherever you run it from
-
-All you need to install on your host system is Docker which is free to install [here](https://docs.docker.com/engine/install/).
-If you are running RFantibody on cloud compute, Docker will often be preinstalled. You can check this by running:
-```
-which docker
-```
-If this returns a path then you have docker available and are good to go.
-
 ### GPU Acceleration
 
-RFantibody requires an NVIDIA GPU to run. You can check whether you have an NVIDIA GPU available by running:
+RFantibody requires an NVIDIA GPU with CUDA support to run. You can check whether you have a compatible NVIDIA GPU available by running:
 ```
 nvidia-smi
 ```
-If this command runs successfully then you have an compatible GPU and RFantibody will be able to run on it.
+If this command runs successfully then you have a compatible GPU and RFantibody will be able to run on it.
+
+### System Requirements
+
+- **GPU**: NVIDIA GPU with CUDA 11.8+ support
+- **OS**: Linux (Ubuntu 22.04 recommended)
 
 # Downloading Weights
 
-Navigate to the directory where RFantibody is downloaded. Then run the following command to download the pipeline weights to the RFantibody/weights directory.
+Navigate to the directory where RFantibody is downloaded. Then run the following command to download the pipeline weights to the RFantibody/weights directory:
 ```
 bash include/download_weights.sh
 ```
 
 # Installation
 
-## Building and Running the RFantibody Docker Container
+## Local Installation (Without Docker)
 
-You will need to run this to make sure that you have the correct privileges to start your docker container:
+This is the recommended installation method for most users. It installs RFantibody directly on your system.
 
+### 1. Install uv (Package Manager)
+
+RFantibody uses [uv](https://docs.astral.sh/uv/) for fast, reliable dependency management. uv will automatically download the required Python version (3.10) if needed.
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+After installation, restart your terminal or run:
+```bash
+source ~/.bashrc  # or ~/.zshrc if using zsh
+```
+
+### 2. Clone the Repository
+
+```bash
+git clone https://github.com/nrbennet/RFantibody.git
+cd RFantibody
+```
+
+### 3. Download Model Weights
+
+```bash
+bash include/download_weights.sh
+```
+
+### 4. Set Up the Python Environment
+
+From the RFantibody directory, run:
+```bash
+uv sync
+```
+This uses uv to:
+- Download Python 3.10 if not already installed
+- Create a virtual environment in `.venv/`
+- Install all dependencies including PyTorch with CUDA 11.8 support
+- Install [Deep Graph Library](https://www.dgl.ai) from CUDA-enabled wheels
+
+### 5. Activate the Environment
+
+After setup, you can either:
+
+**Option A**: Prefix commands with `uv run` (recommended):
+```bash
+uv run rfdiffusion --help
+```
+
+**Option B**: Activate the virtual environment directly:
+```bash
+source .venv/bin/activate
+rfdiffusion --help
+```
+
+### Verifying the Installation
+
+Run the following to verify that RFantibody is installed correctly:
+```bash
+uv run rfdiffusion --help
+```
+This should display the RFdiffusion help message with available options.
+
+---
+
+## Docker Installation (Alternative)
+
+Docker provides a containerized environment that isolates RFantibody from your host system. This can be useful for:
+- Simplified dependency management
+- Reproducible environments across different machines
+- Avoiding conflicts with existing system packages
+
+### Prerequisites
+
+Install Docker from [here](https://docs.docker.com/engine/install/). If you are running RFantibody on cloud compute, Docker may already be installed. Check by running:
+```
+which docker
+```
+
+You will need to add yourself to the docker group to run containers without sudo:
 ```
 sudo usermod -aG docker $USER
 ```
+After running this command, restart your terminal session for this change to take effect.
 
-After running this command, you will need to restart your terminal session for this change to take effect.
+### Build the Docker Image
 
-
-### Build docker image
-Navigate to the directory where RFantibody is downloaded. Then run the following command to build the Docker image for RFantibody:
+Navigate to the directory where RFantibody is downloaded, then build the Docker image:
 ```
 docker build -t rfantibody .
 ```
 
-### Start the Docker image
-Run the following command to start the docker container based on the image you just built:
+### Start the Docker Container
+
+Run the following command to start the container:
 ```
 docker run --name rfantibody --gpus all -v .:/home --memory 10g -it rfantibody
 ```
-This will put you into the RFantibody container at the /home directory which mirrors the directory that you ran the last command from.
+This will put you into the RFantibody container at the `/home` directory which mirrors the directory that you ran the command from.
 
+### Set Up the Python Environment (Inside Container)
 
-
-## Setup the Python Environment
-From the RFantibody container, navigate to the project root and run:
+From inside the RFantibody container, navigate to the project root and run:
 ```bash
 cd /home
-uv sync --all-extras
+uv sync
 ```
-This uses [uv](https://docs.astral.sh/uv/) to:
-- Create a virtual environment in `.venv/`
-- Install all dependencies including PyTorch with CUDA 11.8 support
-- Install [Deep Graph Library](https://www.dgl.ai) from CUDA-enabled wheels
-- Install test dependencies (`--all-extras`)
 
 # Command Line Interface
 
@@ -223,6 +288,8 @@ qvextract predictions.qv -o final_designs/
 
 # Usage
 
+> **Note:** The examples below assume you have the RFantibody environment active. Either activate it with `source .venv/bin/activate`, or prefix each command with `uv run` (e.g., `uv run rfdiffusion ...`).
+
 ## HLT File Format
 We must pass structures between the different steps of the RFantibody pipeline. Each step of the pipeline must know:
 - The antibody-target complex structure we are currently designing for
@@ -242,100 +309,94 @@ To enable the passing of this information between steps of the pipeline, we defi
 
 ## Input Preparation
 
-The antibody-finetuned version of RFdiffusion in RFantibody requires an HLT-remarked framework structure as input. We provide a script to perform this conversion that can be run as follows:
-```
-# From inside of the rfantibody container
-
-uv run python /home/scripts/util/chothia_to_HLT.py -inpdb mychothia.pdb -outpdb myHLT.pdb
+The antibody-finetuned version of RFdiffusion in RFantibody requires an HLT-remarked framework structure as input. We provide a script to perform this conversion:
+```bash
+python scripts/util/chothia_to_HLT.py -inpdb mychothia.pdb -outpdb myHLT.pdb
 ```
 
 This script expects a Chothia annotated .pdb file. A great source for these files is [SabDab](https://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/sabdab), which provides Chothia annotated structures of all antibodies and nanobodies in the PDB and is updated every few months.
 
 We provide the HLT-formatted antibody and nanobody frameworks that were used in the design campaigns from the RFantibody preprint here:
 ```
-Nanobody Framework: RFantibody/scripts/examples/example_inputs/h-NbBCII10.pdb
-ScFv Framework: RFantibody/scripts/examples/example_inputs/hu-4D5-8_Fv.pdb
+Nanobody Framework: scripts/examples/example_inputs/h-NbBCII10.pdb
+ScFv Framework: scripts/examples/example_inputs/hu-4D5-8_Fv.pdb
 ```
 
 ## RFdiffusion
 
 The first step in RFantibody is to generate antibody-target docks using an antibody-finetuned version of RFdiffusion. Here is an example command that will run RFdiffusion:
-```
-# From inside of the rfantibody container
-
-uv run python  /home/scripts/rfdiffusion_inference.py \
-    --config-name antibody \
-    antibody.target_pdb=/home/scripts/examples/example_inputs/rsv_site3.pdb \
-    antibody.framework_pdb=/home/scripts/examples/example_inputs/hu-4D5-8_Fv.pdb \
-    inference.ckpt_override_path=/home/weights/RFdiffusion_Ab.pt \
-    'ppi.hotspot_res=[T305,T456]' \
-    'antibody.design_loops=[L1:8-13,L2:7,L3:9-11,H1:7,H2:6,H3:5-13]' \
-    inference.num_designs=20 \
-    inference.output_prefix=/home/scripts/examples/example_outputs/ab_des
+```bash
+rfdiffusion \
+    -t scripts/examples/example_inputs/rsv_site3.pdb \
+    -f scripts/examples/example_inputs/hu-4D5-8_Fv.pdb \
+    -o scripts/examples/example_outputs/ab_des \
+    -n 20 \
+    -l "H1:7,H2:6,H3:5-13,L1:8-13,L2:7,L3:9-11" \
+    -h "T305,T456"
 ```
 
-Let's go through this command in more detail to understand what these configs are doing:
-- antibody.target_pdb: A path to the target structure that we wish to design antibodies against. This is commonly a cropped target structure to reduce the computational expense of running the pipeline. Cropping strategies are explained in more depth [here](#truncating-your-target-protein).
-- antibody.framework_pdb: A path to the HLT-formatted antibody framework that we wish to use for our design. RFdiffusion will only design the structure and sequence of regions of the framework which are annotated as loops, this allows us to design the dock and loops of already optimized frameworks.
-- inference.ckpt_override_path: The path to the set of RFdiffusion model weights we will use for inference
-- ppi.hotspot_res: A list of hotspot residues that define our epitope. These are provided in the same format as in vanilla RFdiffusion. We discuss selecting hotspots in more detail [here](#selecting-a-target-site).
-- antibody.design_loops: A dictionary that maps each CDR loop to a range of allowed loop lengths. The length of each loop is sampled uniformly from this range and is sampled independently of the lengths sampled for other loops. If a CDR loop exists in the framework but is not in the dict, this CDR loop will have its sequence and structure fixed during design. If a CDR loop is included in the dict but no range of lengths is provided, this CDR loop will have its sequence and structure designed but only with the length of the loop that is provided in the framework structure.
-- inference.num_designs: The number of designs we should generate.
-- inference.output_prefix: The prefix of the .pdb file outputs that we will generate.
+Let's go through this command in more detail to understand what these options are doing:
+- `-t, --target`: A path to the target structure that we wish to design antibodies against. This is commonly a cropped target structure to reduce the computational expense of running the pipeline. Cropping strategies are explained in more depth [here](#truncating-your-target-protein).
+- `-f, --framework`: A path to the HLT-formatted antibody framework that we wish to use for our design. RFdiffusion will only design the structure and sequence of regions of the framework which are annotated as loops, this allows us to design the dock and loops of already optimized frameworks.
+- `-o, --output`: The prefix of the .pdb file outputs that we will generate.
+- `-n, --num-designs`: The number of designs we should generate.
+- `-l, --design-loops`: A mapping of each CDR loop to a range of allowed loop lengths. The length of each loop is sampled uniformly from this range and is sampled independently of the lengths sampled for other loops. If a CDR loop exists in the framework but is not specified, this CDR loop will have its sequence and structure fixed during design. If a CDR loop is included but no range of lengths is provided (e.g., `H1:7`), this CDR loop will have its sequence and structure designed but only with the specified length.
+- `-h, --hotspots`: A list of hotspot residues that define our epitope. We discuss selecting hotspots in more detail [here](#selecting-a-target-site).
 
-We provide an example command with example inputs which can be run as follows:
+For Quiver file output, use `-q` instead of `-o`:
+```bash
+rfdiffusion \
+    -t target.pdb \
+    -f framework.pdb \
+    -q designs.qv \
+    -n 100 \
+    -l "H1:7,H2:6,H3:5-13,L1:8-13,L2:7,L3:9-11" \
+    -h "T305,T456"
 ```
-# From inside of the rfantibody container
 
-bash /home/scripts/examples/rfdiffusion/antibody_pdbdesign.sh
-```
+Run `rfdiffusion --help` to see all available options.
 
 ## ProteinMPNN
 
-The second step in RFantibody is to take the docks generated by RFdiffusion and assign sequences to the CDR loops. We do this using the base version of ProteinMPNN, ie. not an antibody-finetuned model. For convenience, we package the necessary ProteinMPNN scripts in this repo and provide a wrapper script that enables the design of just the CDR loops using ProteinMPNN.
+The second step in RFantibody is to take the docks generated by RFdiffusion and assign sequences to the CDR loops. We do this using the base version of ProteinMPNN, ie. not an antibody-finetuned model. For convenience, we package the necessary ProteinMPNN scripts in this repo and provide a wrapper that enables the design of just the CDR loops using ProteinMPNN.
 
 At its simplest, ProteinMPNN may be run on a directory of HLT-formatted .pdb files using the following command:
-```
-# From inside of the rfantibody container
-
-uv run python /home/scripts/proteinmpnn_interface_design.py \
-    -pdbdir /path/to/inputdir \
-    -outpdbdir /path/to/outputdir
+```bash
+proteinmpnn -i /path/to/inputdir -o /path/to/outputdir
 ```
 
-This will design all CDR loops and will provide one sequence per input structure. There are many more arguments that may be experimented with and are explained by running:
-```
-uv run python /home/scripts/proteinmpnn_interface_design.py --help
+This will design all CDR loops and will provide one sequence per input structure. To generate multiple sequences per structure or use Quiver files:
+```bash
+# Generate 5 sequences per structure with Quiver I/O
+proteinmpnn -q backbones.qv --output-quiver sequences.qv -n 5
+
+# Specify which loops to design and adjust temperature
+proteinmpnn -i structures/ -o sequences/ -l "H1,H2,H3" -t 0.2
 ```
 
-We provide an example command with example inputs which can be run as follows:
-```
-# From inside of the rfantibody container
-
-bash /home/scripts/examples/proteinmpnn/ab_pdb_example.sh
-```
+Run `proteinmpnn --help` to see all available options.
 
 ## RF2
 
 The final step of the RFantibody pipeline is to use our antibody-finetuned RF2 to predict the structure of the sequences we just designed. We then assess whether RF2 is confident that the sequence will bind as we designed.
 
-At it's simplest, RF2 may be run on a directory of HLT-formatted .pdb files using the following command:
-```
-# From inside of the rfantibody container
-
-uv run python /home/scripts/rf2_predict.py \
-    input.pdb_dir=/path/to/inputdir \
-    output.pdb_dir=/path/to/outputdir
+At its simplest, RF2 may be run on a directory of HLT-formatted .pdb files using the following command:
+```bash
+rf2 -i /path/to/inputdir -o /path/to/outputdir
 ```
 
 By default this will run with 10 recycling iterations and with 10% of hotspots provided to the model. We don't yet know what combination of these hyperparameters will be most predictive of design success but it should be possible to tune these values once we have data on more antibody and nanobody campaigns.
 
-We provide an example with example inputs which can be run as follows:
-```
-# From inside of the rfantibody container
+For Quiver file I/O or to adjust recycling iterations:
+```bash
+# Use Quiver files with 15 recycles
+rf2 -q sequences.qv --output-quiver predictions.qv -r 15
 
-bash /home/scripts/examples/rf2/ab_pdb_example.sh
+# Run on a single PDB file
+rf2 -p design.pdb -o predictions/
 ```
+
+Run `rf2 --help` to see all available options.
 
 # Practical Considerations for Antibody Design
 Designing antibodies is similar to designing _de novo_ binders but is in an earlier stage of development. Here we share advice and learnings on how best to use this pipeline to design antibodies which will work experimentally. We expect some of this advice to change as more antibody design campaigns are performed and best-practices crystallize. Several of these sections are adapted from the analogous section of the RFdiffusion README as these two methods share many similarities and the advice applies to both.
