@@ -16,6 +16,7 @@ export TORCH_USE_CUDA_DSA=0
 uv run python /home/scripts/rf2_predict.py \
     input.pdb_dir=${INPUT_DIR} \
     output.pdb_dir=${OUTPUT_DIR} \
-    inference.num_recycles=3 \
+    inference.num_recycles=1 \
+    inference.hotspot_show_proportion=0 \
     inference.cautious=False \
     +inference.seed=42
