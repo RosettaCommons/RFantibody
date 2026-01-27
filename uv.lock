@@ -771,6 +771,7 @@ dependencies = [
     { name = "icecream" },
     { name = "numpy" },
     { name = "opt-einsum" },
+    { name = "pandas" },
     { name = "pyrsistent" },
     { name = "torch" },
     { name = "torch-utils" },
@@ -781,7 +782,6 @@ dependencies = [
 [package.optional-dependencies]
 test = [
     { name = "isort" },
-    { name = "pandas" },
     { name = "pytest" },
 ]
 
@@ -797,7 +797,7 @@ requires-dist = [
     { name = "isort", marker = "extra == 'test'", specifier = ">=5.13.2" },
     { name = "numpy", specifier = ">=1.0,<2.0" },
     { name = "opt-einsum" },
-    { name = "pandas", marker = "extra == 'test'" },
+    { name = "pandas" },
     { name = "pyrsistent" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0.0" },
     { name = "torch", specifier = "==2.3.*", index = "https://download.pytorch.org/whl/cu118" },
