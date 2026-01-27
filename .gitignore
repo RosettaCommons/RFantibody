@@ -1,3 +1,5 @@
+.*
+!.gitignore
 build
 rfantibody.egg-info
 __pycache__
