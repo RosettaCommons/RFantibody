@@ -1,0 +1,108 @@
+Bootstrap: docker
+From: nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
+
+%labels
+    Author RFantibody Team
+    Version 1.0
+    Description Antibody design pipeline with RFdiffusion, ProteinMPNN, and RF2
+
+%post
+    export DEBIAN_FRONTEND=noninteractive
+
+    # System dependencies
+    apt-get update && apt-get install --no-install-recommends -y \
+        python3.10 \
+        python3-pip \
+        vim \
+        make \
+        wget \
+        curl \
+        git \
+        && rm -rf /var/lib/apt/lists/*
+
+    # Install uv
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+
+    # Create app directory
+    mkdir -p /opt/rfantibody
+
+%files
+    # Copy project files (run build from RFantibody directory)
+    . /opt/rfantibody
+
+%post
+    # Install Python dependencies
+    export PATH="/root/.local/bin:$PATH"
+    cd /opt/rfantibody
+    uv sync
+
+%environment
+    export PATH="/root/.local/bin:/opt/rfantibody/.venv/bin:$PATH"
+    export PYTHONPATH="/opt/rfantibody/src:$PYTHONPATH"
+    export UV_PROJECT_DIR="/opt/rfantibody"
+
+%runscript
+    cd /opt/rfantibody
+    exec "$@"
+
+%apprun rfdiffusion
+    cd /opt/rfantibody
+    exec /opt/rfantibody/.venv/bin/python -m rfantibody.cli.inference "$@"
+
+%apprun proteinmpnn
+    cd /opt/rfantibody
+    exec /opt/rfantibody/.venv/bin/python -m rfantibody.proteinmpnn.ab_interface_design "$@"
+
+%apprun rf2
+    cd /opt/rfantibody
+    exec /opt/rfantibody/.venv/bin/python -m rfantibody.rf2 "$@"
+
+%test
+    /opt/rfantibody/.venv/bin/python --version
+    echo "Testing rfdiffusion import..."
+    /opt/rfantibody/.venv/bin/python -c "import rfantibody; print('Import successful')"
+
+%help
+    RFantibody - Structure-based de novo antibody design pipeline
+
+    This container includes:
+      - RFdiffusion: Antibody backbone design
+      - ProteinMPNN: CDR sequence design
+      - RF2: Structure prediction and filtering
+
+    USAGE:
+      apptainer run --nv --writable-tmpfs rfantibody.sif <command> [options]
+
+      # Available commands: rfdiffusion, proteinmpnn, rf2
+      apptainer run --nv --writable-tmpfs rfantibody.sif rfdiffusion --help
+      apptainer run --nv --writable-tmpfs rfantibody.sif proteinmpnn --help
+      apptainer run --nv --writable-tmpfs rfantibody.sif rf2 --help
+
+    BIND MOUNTS:
+      # Mount input/output directories
+      apptainer run --nv --writable-tmpfs -B /path/to/data:/data rfantibody.sif rfdiffusion \
+          --target /data/target.pdb \
+          --output /data/output
+
+    EXAMPLES:
+      # RFdiffusion - design antibody backbones
+      apptainer run --nv --writable-tmpfs -B ./data:/data rfantibody.sif rfdiffusion \
+          --target /data/target.pdb \
+          --framework /data/framework.pdb \
+          --output /data/designs \
+          --num-designs 10
+
+      # ProteinMPNN - design CDR sequences
+      apptainer run --nv --writable-tmpfs -B ./data:/data rfantibody.sif proteinmpnn \
+          --pdb /data/design.pdb \
+          --output /data/sequences
+
+      # RF2 - predict structures
+      apptainer run --nv --writable-tmpfs -B ./data:/data rfantibody.sif rf2 \
+          --input /data/design.pdb \
+          --output /data/predictions
+
+    NOTES:
+      - Always use --nv (GPU support) and --writable-tmpfs flags
+      - Weights (~749MB) are baked into the container
+      - Memory recommendation: 10GB+ for typical workloads

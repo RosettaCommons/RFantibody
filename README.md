@@ -17,6 +17,7 @@ The RFantibody pipeline is described in detail in [this preprint](https://www.bi
 - [Installation](#installation)
   - [Local Installation (Without Docker)](#local-installation-without-docker)
   - [Docker Installation (Alternative)](#docker-installation-alternative)
+  - [Apptainer Installation (HPC)](#apptainer-installation-hpc)
 - [Command Line Interface](#command-line-interface)
   - [Inference Commands](#inference-commands)
   - [Quiver Utilities](#quiver-utilities)
@@ -169,6 +170,118 @@ From inside the RFantibody container, navigate to the project root and run:
 ```bash
 cd /home
 uv sync
+```
+
+---
+
+## Apptainer Installation (HPC)
+
+[Apptainer](https://apptainer.org/) (formerly Singularity) is a container platform designed for HPC environments. Unlike Docker, it runs without root privileges and integrates with job schedulers like SLURM.
+
+### Prerequisites
+
+Install Apptainer on Ubuntu:
+```bash
+sudo apt update
+sudo add-apt-repository -y ppa:apptainer/ppa
+sudo apt update
+sudo apt install -y apptainer
+```
+
+### Build the Apptainer Image
+
+Navigate to the RFantibody directory and build the image:
+```bash
+cd RFantibody
+sudo apptainer build rfantibody.sif rfantibody.def
+```
+
+This creates a self-contained `rfantibody.sif` file (~8GB) with all dependencies, model weights, and the Python environment pre-installed.
+
+### Running Commands
+
+Always use the `--nv` flag (for GPU support) and `--writable-tmpfs` flag (for temporary file writes):
+
+```bash
+# Get help for any command
+apptainer exec --nv --writable-tmpfs rfantibody.sif rfdiffusion --help
+apptainer exec --nv --writable-tmpfs rfantibody.sif proteinmpnn --help
+apptainer exec --nv --writable-tmpfs rfantibody.sif rf2 --help
+```
+
+### Bind Mounting Data
+
+Use `-B` to mount directories from your host system:
+
+```bash
+# Mount a data directory
+apptainer exec --nv --writable-tmpfs \
+    -B /path/to/data:/data \
+    rfantibody.sif rfdiffusion \
+    -t /data/target.pdb \
+    -f /data/framework.pdb \
+    -o /data/output \
+    -n 10
+```
+
+### Full Pipeline Example (Apptainer)
+
+```bash
+# Set up bind mount (adjust path as needed)
+DATA_DIR=/path/to/your/data
+APPTAINER_OPTS="--nv --writable-tmpfs -B $DATA_DIR:/data"
+
+# 1. Design backbones with RFdiffusion
+apptainer exec $APPTAINER_OPTS rfantibody.sif rfdiffusion \
+    -t /data/target.pdb \
+    -f /data/framework.pdb \
+    -q /data/backbones.qv \
+    -n 100 \
+    -l "H1:7,H2:6,H3:5-13,L1:8-13,L2:7,L3:9-11" \
+    -h "T305,T456"
+
+# 2. Design sequences with ProteinMPNN
+apptainer exec $APPTAINER_OPTS rfantibody.sif proteinmpnn \
+    -q /data/backbones.qv \
+    --output-quiver /data/sequences.qv \
+    -n 5
+
+# 3. Predict structures with RF2
+apptainer exec $APPTAINER_OPTS rfantibody.sif rf2 \
+    -q /data/sequences.qv \
+    --output-quiver /data/predictions.qv \
+    -r 10
+
+# 4. Extract scores
+apptainer exec $APPTAINER_OPTS rfantibody.sif qvscorefile /data/predictions.qv > scores.tsv
+```
+
+### Interactive Shell
+
+To enter an interactive shell inside the container:
+```bash
+apptainer shell --nv --writable-tmpfs rfantibody.sif
+```
+
+Type `exit` or press `Ctrl+D` to exit.
+
+### SLURM Integration
+
+Example SLURM batch script:
+```bash
+#!/bin/bash
+#SBATCH --job-name=rfantibody
+#SBATCH --gres=gpu:1
+#SBATCH --mem=32G
+#SBATCH --time=4:00:00
+
+apptainer exec --nv --writable-tmpfs \
+    -B /scratch/$USER:/data \
+    /path/to/rfantibody.sif rfdiffusion \
+    -t /data/target.pdb \
+    -f /data/framework.pdb \
+    -o /data/designs \
+    -n 100
 ```
 
 # Command Line Interface
