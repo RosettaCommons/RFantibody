@@ -144,7 +144,7 @@ wheels = [
 [[package]]
 name = "dgl"
 version = "2.4.0+cu118"
-source = { path = "include/dgl/dgl-2.4.0+cu118-cp310-cp310-manylinux1_x86_64.whl" }
+source = { url = "https://data.dgl.ai/wheels/torch-2.3/cu118/dgl-2.4.0%2Bcu118-cp310-cp310-manylinux1_x86_64.whl" }
 dependencies = [
     { name = "networkx" },
     { name = "numpy" },
@@ -159,7 +159,7 @@ dependencies = [
     { name = "tqdm" },
 ]
 wheels = [
-    { filename = "dgl-2.4.0+cu118-cp310-cp310-manylinux1_x86_64.whl", hash = "sha256:534a79f64eff74a3556cd223f59160f9f77aefcd199be96642b16f24dc24d855" },
+    { url = "https://data.dgl.ai/wheels/torch-2.3/cu118/dgl-2.4.0%2Bcu118-cp310-cp310-manylinux1_x86_64.whl", hash = "sha256:534a79f64eff74a3556cd223f59160f9f77aefcd199be96642b16f24dc24d855" },
 ]
 
 [package.metadata]
@@ -776,7 +776,7 @@ test = [
 requires-dist = [
     { name = "biotite", specifier = ">=0.38.0" },
     { name = "cuda-python", specifier = "==11.8" },
-    { name = "dgl", path = "include/dgl/dgl-2.4.0+cu118-cp310-cp310-manylinux1_x86_64.whl" },
+    { name = "dgl", url = "https://data.dgl.ai/wheels/torch-2.3/cu118/dgl-2.4.0%2Bcu118-cp310-cp310-manylinux1_x86_64.whl" },
     { name = "e3nn" },
     { name = "hydra-core" },
     { name = "icecream" },

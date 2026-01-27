@@ -35,7 +35,7 @@ test = [
 torch = { index = "pytorch" }
 torchaudio = { index = "pytorch" }
 torchvision = { index = "pytorch" }
-dgl = { path = "include/dgl/dgl-2.4.0+cu118-cp310-cp310-manylinux1_x86_64.whl" }
+dgl = { url = "https://data.dgl.ai/wheels/torch-2.3/cu118/dgl-2.4.0%2Bcu118-cp310-cp310-manylinux1_x86_64.whl" }
 
 [[tool.uv.index]]
 name = "pytorch"
