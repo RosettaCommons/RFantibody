@@ -14,6 +14,10 @@ The RFantibody pipeline is described in detail in [this preprint](https://www.bi
 # Table of Contents
 - [Requirements](#requirements)
 - [Installation](#installation)
+- [Command Line Interface](#command-line-interface)
+  - [Inference Commands](#inference-commands)
+  - [Quiver Utilities](#quiver-utilities)
+  - [Full Pipeline Example](#full-pipeline-example)
 - [Usage](#usage)
   - [HLT File Format](#hlt-file-format)
   - [Input Preparation](#input-preparation)
@@ -102,6 +106,121 @@ This uses [uv](https://docs.astral.sh/uv/) to:
 - Install [Deep Graph Library](https://www.dgl.ai) from CUDA-enabled wheels
 - Install test dependencies (`--all-extras`)
 
+# Command Line Interface
+
+RFantibody provides a set of command-line tools for running the design pipeline and working with Quiver files. After setting up the environment, these commands are available directly in your terminal.
+
+## Inference Commands
+
+### RFdiffusion (Backbone Design)
+
+```bash
+rfdiffusion -t antigen.pdb -f framework.pdb -o designs/ab -n 10
+```
+
+Key options:
+- `-t, --target`: Target PDB file (antigen)
+- `-f, --framework`: Framework PDB file (antibody scaffold)
+- `-o, --output`: Output prefix for designs
+- `-q, --output-quiver`: Output to Quiver file instead of PDBs
+- `-n, --num-designs`: Number of designs to generate
+- `-l, --design-loops`: Loop lengths, e.g., `"H1:7,H2:6,H3:5-13,L1:8-13,L2:7,L3:9-11"`
+- `-h, --hotspots`: Hotspot residues, e.g., `"A305,A456"`
+- `--deterministic`: Enable reproducible results
+
+Example with all options:
+```bash
+rfdiffusion \
+    -t target.pdb \
+    -f framework.pdb \
+    -q designs.qv \
+    -n 100 \
+    -l "H1:7,H2:6,H3:5-13,L1:8-13,L2:7,L3:9-11" \
+    -h "T305,T456" \
+    --deterministic
+```
+
+### ProteinMPNN (Sequence Design)
+
+```bash
+proteinmpnn -i structures/ -o sequences/ -n 5
+```
+
+Key options:
+- `-i, --input-dir`: Input directory of PDB files
+- `-q, --input-quiver`: Input Quiver file
+- `-o, --output-dir`: Output directory for PDB files
+- `--output-quiver`: Output Quiver file
+- `-l, --loops`: Loops to design (default: `H1,H2,H3,L1,L2,L3`)
+- `-n, --seqs-per-struct`: Sequences per structure
+- `-t, --temperature`: Sampling temperature (default: 0.1)
+- `--deterministic`: Enable reproducible results
+
+Example with Quiver files:
+```bash
+proteinmpnn -q backbones.qv --output-quiver sequences.qv -n 5 -t 0.2
+```
+
+### RF2 (Structure Prediction)
+
+```bash
+rf2 -i structures/ -o predictions/
+```
+
+Key options:
+- `-p, --input-pdb`: Single input PDB file
+- `-i, --input-dir`: Input directory of PDB files
+- `-q, --input-quiver`: Input Quiver file
+- `-o, --output-dir`: Output directory for PDB files
+- `--output-quiver`: Output Quiver file
+- `-r, --num-recycles`: Recycling iterations (default: 10)
+- `-s, --seed`: Random seed for reproducibility
+
+Example with Quiver files:
+```bash
+rf2 -q sequences.qv --output-quiver predictions.qv -r 10
+```
+
+## Quiver Utilities
+
+Commands for working with Quiver files (protein design databases):
+
+| Command | Description |
+|---------|-------------|
+| `qvls` | List all tags in a Quiver file |
+| `qvextract` | Extract all PDB files from a Quiver |
+| `qvextractspecific` | Extract specific PDBs by tag name |
+| `qvscorefile` | Extract scores to a TSV file |
+| `qvsplit` | Split into multiple files |
+| `qvslice` | Extract specific tags to new Quiver |
+| `qvrename` | Rename tags in a Quiver file |
+| `qvfrompdbs` | Create a Quiver from PDB files |
+
+All commands support `--help` for detailed usage information.
+
+## Full Pipeline Example
+
+```bash
+# 1. Design backbones with RFdiffusion
+rfdiffusion \
+    -t antigen.pdb \
+    -f framework.pdb \
+    -q backbones.qv \
+    -n 100 \
+    -l "H1:7,H2:6,H3:5-13,L1:8-13,L2:7,L3:9-11" \
+    -h "T305,T456"
+
+# 2. Design sequences with ProteinMPNN
+proteinmpnn -q backbones.qv --output-quiver sequences.qv -n 5
+
+# 3. Predict structures with RF2
+rf2 -q sequences.qv --output-quiver predictions.qv -r 10
+
+# 4. Extract scores and top designs
+qvscorefile predictions.qv > scores.tsv
+qvextract predictions.qv -o final_designs/
+```
+
 # Usage
 
 ## HLT File Format
@@ -127,7 +246,7 @@ The antibody-finetuned version of RFdiffusion in RFantibody requires an HLT-rema
 ```
 # From inside of the rfantibody container
 
-poetry run python /home/scripts/util/chothia_to_HLT.py -inpdb mychothia.pdb -outpdb myHLT.pdb
+uv run python /home/scripts/util/chothia_to_HLT.py -inpdb mychothia.pdb -outpdb myHLT.pdb
 ```
 
 This script expects a Chothia annotated .pdb file. A great source for these files is [SabDab](https://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/sabdab), which provides Chothia annotated structures of all antibodies and nanobodies in the PDB and is updated every few months.
@@ -144,7 +263,7 @@ The first step in RFantibody is to generate antibody-target docks using an antib
 ```
 # From inside of the rfantibody container
 
-poetry run python  /home/scripts/rfdiffusion_inference.py \
+uv run python  /home/scripts/rfdiffusion_inference.py \
     --config-name antibody \
     antibody.target_pdb=/home/scripts/examples/example_inputs/rsv_site3.pdb \
     antibody.framework_pdb=/home/scripts/examples/example_inputs/hu-4D5-8_Fv.pdb \
@@ -179,14 +298,14 @@ At its simplest, ProteinMPNN may be run on a directory of HLT-formatted .pdb fil
 ```
 # From inside of the rfantibody container
 
-poetry run python /home/scripts/proteinmpnn_interface_design.py \
+uv run python /home/scripts/proteinmpnn_interface_design.py \
     -pdbdir /path/to/inputdir \
     -outpdbdir /path/to/outputdir
 ```
 
 This will design all CDR loops and will provide one sequence per input structure. There are many more arguments that may be experimented with and are explained by running:
 ```
-poetry run python /home/scripts/proteinmpnn_interface_design.py --help
+uv run python /home/scripts/proteinmpnn_interface_design.py --help
 ```
 
 We provide an example command with example inputs which can be run as follows:
@@ -204,7 +323,7 @@ At it's simplest, RF2 may be run on a directory of HLT-formatted .pdb files usin
 ```
 # From inside of the rfantibody container
 
-poetry run python /home/scripts/rf2_predict.py \
+uv run python /home/scripts/rf2_predict.py \
     input.pdb_dir=/path/to/inputdir \
     output.pdb_dir=/path/to/outputdir
 ```
@@ -259,43 +378,47 @@ The lack of an effective filter is the main limitation of the RFantibody pipelin
 
 When running large-scale design campaigns it is often useful to have a single file which holds many designs and the scores associated with those designs. This is gentler on file systems than storing and accessing thousands of individual .pdb files. We offer the ability to use [Quiver files](https://github.com/nrbennet/quiver) in the RFantibody pipeline. These files are simply one large file with the contents of many smaller files inside of them. Each entry has a unique name and can store meta_data about the entry.
 
-There are several command line tools in this repository as well which enable the manipulation of Quiver files with composable (pipe-able) commands.
+RFantibody provides command line tools for working with Quiver files. These are composable (pipe-able) commands inspired by Brian Coventry's [silent_tools](https://github.com/bcov77/silent_tools) project. Use `--help` with any command for detailed options.
 
-Quiver files and the different quiver tools are heavily inspired by Brian Coventry's [silent_tools](https://github.com/bcov77/silent_tools) project. The difference is that Quiver files are able to work in environments outside of Rosetta which is very convenient. The quiver file command line tools are direct analogues of the silent tools and will be familiar to those who have used silent_tools before:
-
-```
+```bash
 # make a quiver file
 qvfrompdbs *.pdb > my.qv
 
 # ask what's in a quiver file
-qvls my.qv  
+qvls my.qv
 
 # ask how many things are in a quiver file
-qvls my.qv | wc -l   
+qvls my.qv | wc -l
 
 # extract all pdbs from a quiver file
-qvextract my.qv   
+qvextract my.qv
+
+# extract to a specific directory
+qvextract my.qv -o output_dir/
 
 # extract the first 10 pdbs from a quiver file
-qvls my.qv | head -n 10 | qvextractspecific my.qv    
+qvls my.qv | head -n 10 | qvextractspecific my.qv
 
 # extract a random 10 pdbs from a quiver file
-qvls my.qv | shuf | head -n 10 | qvextractspecific my.qv  
+qvls my.qv | shuf | head -n 10 | qvextractspecific my.qv
 
 # extract a specific pdb from a quiver file
 qvextractspecific my.qv name_of_pdb_0001
 
 # produce a scorefile from a quiver file
-qvscorefile my.qv   
+qvscorefile my.qv > scores.tsv
 
 # combine qv files
-cat 1.qv 2.qv 3.qv > my.qv  
+cat 1.qv 2.qv 3.qv > my.qv
 
-# ensure all pdbs in quiver file have unique names
-qvls my.qv | qvrename my.qv > uniq.qv
+# rename tags in a quiver file
+qvls my.qv | sed 's/$/_v2/' | qvrename my.qv > renamed.qv
+
+# slice specific tags into a new quiver file
+qvls | shuf | head -n 10 | qvslice > subset.qv
 
 # split a quiver file into groups of 100
-qvsplit my.qv 100
+qvsplit my.qv 100 -o split_dir/
 ```
 
 ## Reading and Writing Quiver Files

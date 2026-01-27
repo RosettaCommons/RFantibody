@@ -22,6 +22,7 @@ dependencies = [
     "dgl",
     "e3nn",
     "pyrsistent",
+    "click>=8.0.0",
 ]
 
 [project.optional-dependencies]
@@ -30,6 +31,21 @@ test = [
     "pandas",
     "isort>=5.13.2",
 ]
+
+[project.scripts]
+# Quiver utilities
+qvls = "rfantibody.cli.quiver:qvls"
+qvextract = "rfantibody.cli.quiver:qvextract"
+qvextractspecific = "rfantibody.cli.quiver:qvextractspecific"
+qvscorefile = "rfantibody.cli.quiver:qvscorefile"
+qvsplit = "rfantibody.cli.quiver:qvsplit"
+qvslice = "rfantibody.cli.quiver:qvslice"
+qvrename = "rfantibody.cli.quiver:qvrename"
+qvfrompdbs = "rfantibody.cli.quiver:qvfrompdbs"
+# Inference commands
+rfdiffusion = "rfantibody.cli.inference:rfdiffusion"
+proteinmpnn = "rfantibody.cli.inference:proteinmpnn"
+rf2 = "rfantibody.cli.inference:rf2"
 
 [tool.uv.sources]
 torch = { index = "pytorch" }
