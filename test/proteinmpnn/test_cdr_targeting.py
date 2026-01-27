@@ -185,35 +185,65 @@ class TestProteinMPNNCDRTargeting:
 
         return designed
 
+    def _get_cdr_positions_from_remarks(self, pdb_path: Path, cdrs: list) -> set:
+        """
+        Parse CDR positions directly from REMARK PDBinfo-LABEL lines.
+
+        This is the ground truth - these positions come directly from the PDB
+        file and are independent of cdr_dict parsing. This ensures the test
+        catches any indexing bugs in cdr_dict.
+
+        Args:
+            pdb_path: Path to PDB file
+            cdrs: List of CDR names to get positions for (e.g., ['H3'] or ['H1', 'L3'])
+
+        Returns:
+            Set of 1-indexed global positions for the requested CDRs
+        """
+        positions = set()
+        cdrs_upper = [c.upper() for c in cdrs]
+
+        with open(pdb_path, 'r') as f:
+            for line in f:
+                if line.startswith('REMARK PDBinfo-LABEL'):
+                    parts = line.strip().split()
+                    # Format: REMARK PDBinfo-LABEL: <resnum> <cdr>
+                    resnum = int(parts[2])
+                    cdr = parts[3].upper()
+                    if cdr in cdrs_upper:
+                        positions.add(resnum)
+
+        return positions
+
     def test_h3_only_targeting(self, test_input_pdb):
         """
         Test that targeting H3 designs exactly the H3 residues.
 
         Uses --allow-x to make designed positions UNK, making it trivially
-        clear which positions were targeted.
+        clear which positions were targeted. Compares against REMARK lines
+        (ground truth) to catch any indexing bugs in cdr_dict.
         """
         with tempfile.TemporaryDirectory() as tmpdir:
             output_dir = Path(tmpdir)
             output_pdb = self._run_proteinmpnn(test_input_pdb, output_dir, "H3")
 
-            # Get expected H3 positions from input
-            input_pose = Pose.from_pdb(str(test_input_pdb))
-            expected_h3_positions = set(input_pose.cdr_dict['H3'])
+            # Get expected H3 positions from REMARK lines (ground truth)
+            expected_h3_positions = self._get_cdr_positions_from_remarks(test_input_pdb, ['H3'])
 
             # Get positions that were designed (marked as UNK)
             designed_positions = self._get_designed_positions(output_pdb)
 
-            # Designed positions should exactly match H3 positions
+            # Designed positions should exactly match H3 positions from REMARK lines
             assert designed_positions == expected_h3_positions, (
-                f"Designed positions don't match H3:\n"
-                f"  Expected H3 positions: {sorted(expected_h3_positions)}\n"
+                f"Designed positions don't match H3 from REMARK lines:\n"
+                f"  Expected H3 positions (from REMARK): {sorted(expected_h3_positions)}\n"
                 f"  Actual designed (UNK) positions: {sorted(designed_positions)}\n"
                 f"  Missing: {sorted(expected_h3_positions - designed_positions)}\n"
                 f"  Extra: {sorted(designed_positions - expected_h3_positions)}"
             )
 
             print(f"H3 targeting test passed:")
-            print(f"  H3 positions: {sorted(expected_h3_positions)}")
+            print(f"  H3 positions (from REMARK): {sorted(expected_h3_positions)}")
             print(f"  Designed (UNK) positions: {sorted(designed_positions)}")
 
     def test_l1_only_targeting(self, test_input_pdb):
@@ -221,30 +251,30 @@ class TestProteinMPNNCDRTargeting:
         Test that targeting L1 designs exactly the L1 residues.
 
         Uses --allow-x to make designed positions UNK, making it trivially
-        clear which positions were targeted.
+        clear which positions were targeted. Compares against REMARK lines
+        (ground truth) to catch any indexing bugs in cdr_dict.
         """
         with tempfile.TemporaryDirectory() as tmpdir:
             output_dir = Path(tmpdir)
             output_pdb = self._run_proteinmpnn(test_input_pdb, output_dir, "L1")
 
-            # Get expected L1 positions from input
-            input_pose = Pose.from_pdb(str(test_input_pdb))
-            expected_l1_positions = set(input_pose.cdr_dict['L1'])
+            # Get expected L1 positions from REMARK lines (ground truth)
+            expected_l1_positions = self._get_cdr_positions_from_remarks(test_input_pdb, ['L1'])
 
             # Get positions that were designed (marked as UNK)
             designed_positions = self._get_designed_positions(output_pdb)
 
-            # Designed positions should exactly match L1 positions
+            # Designed positions should exactly match L1 positions from REMARK lines
             assert designed_positions == expected_l1_positions, (
-                f"Designed positions don't match L1:\n"
-                f"  Expected L1 positions: {sorted(expected_l1_positions)}\n"
+                f"Designed positions don't match L1 from REMARK lines:\n"
+                f"  Expected L1 positions (from REMARK): {sorted(expected_l1_positions)}\n"
                 f"  Actual designed (UNK) positions: {sorted(designed_positions)}\n"
                 f"  Missing: {sorted(expected_l1_positions - designed_positions)}\n"
                 f"  Extra: {sorted(designed_positions - expected_l1_positions)}"
             )
 
             print(f"L1 targeting test passed:")
-            print(f"  L1 positions: {sorted(expected_l1_positions)}")
+            print(f"  L1 positions (from REMARK): {sorted(expected_l1_positions)}")
             print(f"  Designed (UNK) positions: {sorted(designed_positions)}")
 
     def test_multiple_cdr_targeting(self, test_input_pdb):
@@ -252,30 +282,30 @@ class TestProteinMPNNCDRTargeting:
         Test that targeting H1,L3 designs exactly those CDR residues.
 
         Uses --allow-x to make designed positions UNK, making it trivially
-        clear which positions were targeted.
+        clear which positions were targeted. Compares against REMARK lines
+        (ground truth) to catch any indexing bugs in cdr_dict.
         """
         with tempfile.TemporaryDirectory() as tmpdir:
             output_dir = Path(tmpdir)
             output_pdb = self._run_proteinmpnn(test_input_pdb, output_dir, "H1,L3")
 
-            # Get expected positions from input
-            input_pose = Pose.from_pdb(str(test_input_pdb))
-            expected_positions = set(input_pose.cdr_dict['H1']) | set(input_pose.cdr_dict['L3'])
+            # Get expected positions from REMARK lines (ground truth)
+            expected_positions = self._get_cdr_positions_from_remarks(test_input_pdb, ['H1', 'L3'])
 
             # Get positions that were designed (marked as UNK)
             designed_positions = self._get_designed_positions(output_pdb)
 
-            # Designed positions should exactly match H1+L3 positions
+            # Designed positions should exactly match H1+L3 positions from REMARK lines
             assert designed_positions == expected_positions, (
-                f"Designed positions don't match H1+L3:\n"
-                f"  Expected positions: {sorted(expected_positions)}\n"
+                f"Designed positions don't match H1+L3 from REMARK lines:\n"
+                f"  Expected positions (from REMARK): {sorted(expected_positions)}\n"
                 f"  Actual designed (UNK) positions: {sorted(designed_positions)}\n"
                 f"  Missing: {sorted(expected_positions - designed_positions)}\n"
                 f"  Extra: {sorted(designed_positions - expected_positions)}"
             )
 
             print(f"H1+L3 targeting test passed:")
-            print(f"  H1+L3 positions: {sorted(expected_positions)}")
+            print(f"  H1+L3 positions (from REMARK): {sorted(expected_positions)}")
             print(f"  Designed (UNK) positions: {sorted(designed_positions)}")
 
 

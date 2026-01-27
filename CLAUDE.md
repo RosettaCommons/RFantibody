@@ -1,8 +1,7 @@
 # RFantibody Development Guide
 
 ## Commands
-- Build/setup: `bash include/setup.sh`
-- Install dependencies: `uv sync` (or `uv sync --all-extras` to include test dependencies)
+- Setup/install dependencies: `uv sync --all-extras` (installs all dependencies including test dependencies)
 - Add a dependency: `uv add <package>`
 - Run tests: `uv run python -m test.run_tests`
 - Run a specific example: `bash scripts/examples/[path/to/example].sh`
@@ -32,11 +31,19 @@
 - The test framework automatically detects GPU type and uses appropriate reference files
 
 ## Development Log
+### 2026-01-27
+- Replaced USalign-based structural alignment with biotite's Kabsch superposition for RMSD calculations
+- Simplified RMSD calculation workflow: now uses direct Cα superposition for same-length sequences
+- Removed dependency on external USalign binary for routine RMSD calculations
+- Added length-checking to gracefully skip RMSD calculations when input/output structures differ in length
+- Changed DGL installation to use direct URL in pyproject.toml instead of wget download
+- Removed include/setup.sh script in favor of direct `uv sync` commands
+- Updated documentation to reflect simplified environment setup
+
 ### 2026-01-25
 - Migrated from Poetry to uv for package management
 - Converted pyproject.toml from [tool.poetry] to PEP 621 [project] format
 - Updated Dockerfile to install uv instead of poetry
-- Updated setup.sh to use `uv sync` instead of `poetry install`
 - Configured explicit PyTorch CUDA 11.8 index for torch packages
 - Switched build backend from poetry to hatchling
 
