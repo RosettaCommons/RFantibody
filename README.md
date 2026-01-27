@@ -502,8 +502,8 @@ By default this will run with 10 recycling iterations and with 10% of hotspots p
 
 For Quiver file I/O or to adjust recycling iterations:
 ```bash
-# Use Quiver files with 15 recycles
-rf2 -q sequences.qv --output-quiver predictions.qv -r 15
+# Use Quiver files with 10 recycles
+rf2 -q sequences.qv --output-quiver predictions.qv -r 10
 
 # Run on a single PDB file
 rf2 -p design.pdb -o predictions/

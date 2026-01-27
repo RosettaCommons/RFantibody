@@ -16,5 +16,4 @@ uv run rfdiffusion \
     --design-loops "L1:8-13,L2:7,L3:9-11,H1:7,H2:6,H3:5-13" \
     --hotspots "T305,T456" \
     --diffuser-t 50 \
-    --final-step 48 \
     --deterministic
