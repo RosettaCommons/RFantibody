@@ -10,7 +10,7 @@ from rfantibody.rf2.modules.model_runner import AbPredictor
 from rfantibody.rf2.modules.preprocess import Preprocess, pose_to_inference_RFinput
 
 
-@hydra.main(version_base=None, config_path='/home/src/rfantibody/rf2/config', config_name='base')
+@hydra.main(version_base=None, config_path='../src/rfantibody/rf2/config', config_name='base')
 def main(conf: HydraConfig) -> None:
     """
     Main function

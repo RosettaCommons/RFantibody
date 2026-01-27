@@ -162,6 +162,8 @@ def rfdiffusion(
               help='Model weights path (default: auto-detect)')
 @click.option('--omit-aas', type=str, default='CX',
               help='Amino acids to omit from design (default: CX)')
+@click.option('--augment-eps', type=float, default=None,
+              help='Backbone noise augmentation (default: model default)')
 @click.option('--deterministic', is_flag=True,
               help='Enable deterministic mode for reproducibility')
 @click.option('--debug', is_flag=True,
@@ -176,6 +178,7 @@ def proteinmpnn(
     temperature: float,
     weights: Optional[Path],
     omit_aas: str,
+    augment_eps: Optional[float],
     deterministic: bool,
     debug: bool
 ):
@@ -230,6 +233,8 @@ def proteinmpnn(
     cmd.extend(['-seqs_per_struct', str(seqs_per_struct)])
     cmd.extend(['-temperature', str(temperature)])
     cmd.extend(['-omit_AAs', omit_aas])
+    if augment_eps is not None:
+        cmd.extend(['-augment_eps', str(augment_eps)])
 
     # Model weights
     if weights:
@@ -353,6 +358,10 @@ def rf2(
     # Model weights
     if weights:
         cmd.append(f'model.model_weights={weights}')
+    else:
+        default_weights = PathConfig.get_weight_path('rf2')
+        if default_weights.exists():
+            cmd.append(f'model.model_weights={default_weights}')
 
     # Seed for reproducibility
     if seed is not None:
