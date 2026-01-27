@@ -12,7 +12,12 @@ from datetime import datetime
 import pytest
 import torch
 
+from rfantibody.config import PathConfig
+
 # Option is defined in the root conftest.py
+
+# Get test paths for this module
+_test_paths = PathConfig.get_test_paths('rfdiffusion')
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -20,11 +25,11 @@ def check_gpu():
     """Check if CUDA is available and we're on a supported GPU"""
     if not torch.cuda.is_available():
         pytest.skip("No GPU found, tests require a supported GPU (A4000 or H100)")
-    
+
     gpu_info = torch.cuda.get_device_properties(0)
     if 'A4000' not in gpu_info.name and 'H100' not in gpu_info.name:
         pytest.skip("Tests require a supported GPU (A4000 or H100)")
-    
+
     # Log which GPU and reference data we're using
     print(f"Running tests on {gpu_info.name} GPU")
     if 'A4000' in gpu_info.name:
@@ -47,10 +52,10 @@ def output_dir(request):
     if keep_outputs:
         # Create a timestamped directory for inspection
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_path = f"test/rfdiffusion/example_outputs_{timestamp}"
+        output_path = _test_paths['outputs'].parent / f"example_outputs_{timestamp}"
         os.makedirs(output_path, exist_ok=True)
         print(f"Saving test outputs to: {output_path}")
-        return output_path
+        return str(output_path)
     else:
         # Create a temporary directory that will be automatically cleaned up
         # We need to keep a reference to temp_dir object so it's not garbage collected
@@ -65,21 +70,21 @@ def output_dir(request):
 def ref_dir():
     """
     Provide the reference directory path based on GPU type.
-    
+
     Uses GPU-specific references when running on a supported GPU (A4000 or H100).
     """
-    base_ref_dir = "test/rfdiffusion/reference_outputs"
-    
+    base_ref_dir = _test_paths['references']
+
     # Check which GPU we're running on
     if torch.cuda.is_available():
         gpu_info = torch.cuda.get_device_properties(0)
         if 'A4000' in gpu_info.name:
-            return os.path.join(base_ref_dir, "A4000_references")
+            return str(base_ref_dir / "A4000_references")
         elif 'H100' in gpu_info.name:
-            return os.path.join(base_ref_dir, "H100_references")
-    
+            return str(base_ref_dir / "H100_references")
+
     # Default reference dir for other GPUs
-    return base_ref_dir
+    return str(base_ref_dir)
 
 
 @pytest.fixture(scope="session")

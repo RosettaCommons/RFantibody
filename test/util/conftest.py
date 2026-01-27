@@ -10,23 +10,28 @@ import tempfile
 
 import pytest
 
+from rfantibody.config import PathConfig
+
+# Get test paths for this module
+_test_paths = PathConfig.get_test_paths('util')
+
 
 @pytest.fixture(scope="session")
 def output_dir(request):
     """
     Create and provide a temporary directory for test results.
-    
+
     By default, uses a system temporary directory that will be automatically
     cleaned up. If --keep-outputs is specified, uses the fixed output path.
     """
     # Check if we should keep outputs in the standard location
     keep_outputs = request.config.getoption("--keep-outputs", default=False)
-    
+
     if keep_outputs:
         # Use a dedicated path in the module test directory for inspection
-        output_path = "test/util/example_outputs"
+        output_path = _test_paths['outputs']
         os.makedirs(output_path, exist_ok=True)
-        return output_path
+        return str(output_path)
     else:
         # Create a temporary directory that will be automatically cleaned up
         # We need to keep a reference to temp_dir object so it's not garbage collected
@@ -40,7 +45,7 @@ def output_dir(request):
 @pytest.fixture(scope="session")
 def ref_dir():
     """Provide the reference directory path."""
-    return "test/util/reference_outputs"
+    return str(_test_paths['references'])
 
 
 @pytest.fixture(scope="session")
