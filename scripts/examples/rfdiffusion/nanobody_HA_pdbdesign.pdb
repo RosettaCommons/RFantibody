@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Example: Design nanobody backbones targeting Influenza Haemagglutinin A
+#
+# This example uses the rfdiffusion CLI to design nanobody CDR loops
+# that bind to a target antigen (Influenza Haemagglutinin A).
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+EXAMPLES_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+uv run rfdiffusion \
+    --target "$EXAMPLES_DIR/example_inputs/flu_HA.pdb" \
+    --framework "$EXAMPLES_DIR/example_inputs/h-NbBCII10.pdb" \
+    -q out.qv \
+    --num-designs 10 \
+    --design-loops "H1:7,H2:5-6,H3:5-13" \
+    --hotspots "B146,B170,B177" \
+    --diffuser-t 50
