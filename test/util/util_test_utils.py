@@ -19,10 +19,10 @@ from biotite.structure.io.pdb import PDBFile
 def _extract_remark_lines(pdb_path: Union[str, Path]) -> list:
     """
     Extract REMARK lines from a PDB file.
-    
+
     Args:
         pdb_path: Path to PDB file
-        
+
     Returns:
         List of REMARK lines (stripped of whitespace)
     """
@@ -32,6 +32,112 @@ def _extract_remark_lines(pdb_path: Union[str, Path]) -> list:
             if line.startswith('REMARK'):
                 remark_lines.append(line.strip())
     return remark_lines
+
+
+def _extract_score_lines(pdb_path: Union[str, Path]) -> dict:
+    """
+    Extract SCORE lines from a PDB file (RF2 output format).
+
+    Args:
+        pdb_path: Path to PDB file
+
+    Returns:
+        Dictionary mapping score names to float values
+    """
+    scores = {}
+    with open(pdb_path, 'r') as f:
+        for line in f:
+            if line.startswith('SCORE '):
+                # Format: "SCORE metric_name: value"
+                parts = line.strip().split(':', 1)
+                if len(parts) == 2:
+                    metric_name = parts[0].replace('SCORE ', '').strip()
+                    try:
+                        value = float(parts[1].strip())
+                        scores[metric_name] = value
+                    except ValueError:
+                        pass
+    return scores
+
+
+def compare_score_lines(
+    ref_file: Union[str, Path],
+    output_file: Union[str, Path],
+    rel_tolerance: float = 0.01,
+    abs_tolerance: float = 0.1,
+) -> Union[bool, list]:
+    """
+    Compare SCORE lines between two PDB files.
+
+    RF2 outputs SCORE lines with metrics like:
+    - interaction_pae, pae (predicted aligned error)
+    - pred_lddt (confidence/pLDDT)
+    - Various RMSD metrics
+
+    Args:
+        ref_file: Path to reference PDB file
+        output_file: Path to output PDB file to compare
+        rel_tolerance: Relative tolerance for score comparison (default 1%)
+        abs_tolerance: Absolute tolerance for score comparison (default 0.1)
+
+    Returns:
+        True if scores match within tolerances, or a list of differences
+    """
+    ref_path = Path(ref_file)
+    out_path = Path(output_file)
+
+    if not out_path.exists():
+        return [{'type': 'file_not_found', 'message': f"Output file not found: {output_file}"}]
+
+    if not ref_path.exists():
+        return [{'type': 'file_not_found', 'message': f"Reference file not found: {ref_file}"}]
+
+    ref_scores = _extract_score_lines(ref_path)
+    out_scores = _extract_score_lines(out_path)
+
+    differences = []
+
+    # Check for missing scores in output
+    for metric in ref_scores:
+        if metric not in out_scores:
+            differences.append({
+                'type': 'missing_score',
+                'metric': metric,
+                'message': f"Missing score in output: {metric}"
+            })
+
+    # Check for extra scores in output
+    for metric in out_scores:
+        if metric not in ref_scores:
+            differences.append({
+                'type': 'extra_score',
+                'metric': metric,
+                'message': f"Extra score in output not in reference: {metric}"
+            })
+
+    # Compare matching scores
+    for metric in ref_scores:
+        if metric in out_scores:
+            ref_val = ref_scores[metric]
+            out_val = out_scores[metric]
+
+            # Use both relative and absolute tolerance
+            # Pass if within either tolerance
+            abs_diff = abs(ref_val - out_val)
+            rel_diff = abs_diff / abs(ref_val) if ref_val != 0 else abs_diff
+
+            if abs_diff > abs_tolerance and rel_diff > rel_tolerance:
+                differences.append({
+                    'type': 'score_mismatch',
+                    'metric': metric,
+                    'ref_value': ref_val,
+                    'out_value': out_val,
+                    'abs_diff': abs_diff,
+                    'rel_diff': rel_diff,
+                    'message': f"Score mismatch for {metric}: ref={ref_val:.4f}, out={out_val:.4f} (diff={abs_diff:.4f}, {rel_diff*100:.2f}%)"
+                })
+
+    return True if not differences else differences
 
 
 def run_command(cmd, cwd=None):

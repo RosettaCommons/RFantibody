@@ -15,6 +15,7 @@ import pytest
 from test.util.util_test_utils import (
     compare_files,
     compare_pdb_structures,
+    compare_score_lines,
     create_test_report,
     run_command,
 )
@@ -66,24 +67,49 @@ def test_rf2_script(script_name, clean_output_dir, output_dir, ref_dir):
     for ref_file, output_file in expected_files:
         # Use biotite-based comparison for PDB files
         if output_file.endswith('.pdb'):
-            result = compare_pdb_structures(ref_file, output_file, coord_threshold=1)
+            # Compare structure with 0.2 Angstrom tolerance
+            result = compare_pdb_structures(ref_file, output_file, coord_threshold=0.2)
+
+            # If result is True, files match; if it's a list, there are differences
+            if result is not True:
+                output_filename = os.path.basename(output_file)
+                all_differences[output_filename] = result
+
+                diff_message = "\n".join(
+                    [d.get('message', 'Difference found') for d in result[:5]]
+                )
+                if len(result) > 5:
+                    diff_message += f"\n... and {len(result) - 5} more differences"
+
+                pytest.fail(f"Structure differences found in {output_file}:\n{diff_message}")
+
+            # Also compare SCORE lines (confidence values, PAE, RMSDs)
+            score_result = compare_score_lines(ref_file, output_file)
+            if score_result is not True:
+                output_filename = os.path.basename(output_file)
+                all_differences[f"{output_filename}_scores"] = score_result
+
+                diff_message = "\n".join(
+                    [d.get('message', 'Difference found') for d in score_result[:5]]
+                )
+                if len(score_result) > 5:
+                    diff_message += f"\n... and {len(score_result) - 5} more differences"
+
+                pytest.fail(f"Score/confidence differences found in {output_file}:\n{diff_message}")
         else:
             result = compare_files(ref_file, output_file)
-        
-        # If result is True, files match; if it's a list, there are differences
-        if result is not True:
-            # Store the differences for reporting
-            output_filename = os.path.basename(output_file)
-            all_differences[output_filename] = result
-            
-            # Format the first few differences for display
-            diff_message = "\n".join(
-                [d.get('message', 'Difference found') for d in result[:5]]
-            )
-            if len(result) > 5:
-                diff_message += f"\n... and {len(result) - 5} more differences"
-            
-            pytest.fail(f"Differences found in {output_file}:\n{diff_message}")
+
+            if result is not True:
+                output_filename = os.path.basename(output_file)
+                all_differences[output_filename] = result
+
+                diff_message = "\n".join(
+                    [d.get('message', 'Difference found') for d in result[:5]]
+                )
+                if len(result) > 5:
+                    diff_message += f"\n... and {len(result) - 5} more differences"
+
+                pytest.fail(f"Differences found in {output_file}:\n{diff_message}")
 
 
 def test_all_scripts_as_suite(clean_output_dir, output_dir, ref_dir):
@@ -130,30 +156,58 @@ def test_all_scripts_as_suite(clean_output_dir, output_dir, ref_dir):
                     success = False
                     details.append(f"File not found: {output_file}")
                     continue
-                
+
                 if not os.path.exists(ref_file):
                     details.append(f"Reference file not found: {ref_file}")
                     continue
-                
+
                 # Use biotite-based comparison for PDB files
                 if output_file.endswith('.pdb'):
-                    result = compare_pdb_structures(ref_file, output_file, coord_threshold=0.5)
+                    # Compare structure with 0.2 Angstrom tolerance
+                    result = compare_pdb_structures(ref_file, output_file, coord_threshold=0.2)
+
+                    if result is not True:
+                        output_filename = os.path.basename(output_file)
+                        file_differences[output_filename] = result
+                        success = False
+                        details.append(f"Structure differences in {output_filename}: {len(result)} differences found")
+
+                        diff_message = "\n".join(
+                            [d.get('message', 'Difference found') for d in result[:5]]
+                        )
+                        if len(result) > 5:
+                            diff_message += f"\n... and {len(result) - 5} more differences"
+                        details.append(diff_message)
+
+                    # Also compare SCORE lines (confidence values, PAE, RMSDs)
+                    score_result = compare_score_lines(ref_file, output_file)
+                    if score_result is not True:
+                        output_filename = os.path.basename(output_file)
+                        file_differences[f"{output_filename}_scores"] = score_result
+                        success = False
+                        details.append(f"Score/confidence differences in {output_filename}: {len(score_result)} differences found")
+
+                        diff_message = "\n".join(
+                            [d.get('message', 'Difference found') for d in score_result[:5]]
+                        )
+                        if len(score_result) > 5:
+                            diff_message += f"\n... and {len(score_result) - 5} more differences"
+                        details.append(diff_message)
                 else:
                     result = compare_files(ref_file, output_file)
-                
-                if result is not True:
-                    output_filename = os.path.basename(output_file)
-                    file_differences[output_filename] = result
-                    success = False
-                    details.append(f"Differences in {output_filename}: {len(result)} differences found")
-                    
-                    # Format the first few differences for display
-                    diff_message = "\n".join(
-                        [d.get('message', 'Difference found') for d in result[:5]]
-                    )
-                    if len(result) > 5:
-                        diff_message += f"\n... and {len(result) - 5} more differences"
-                    details.append(diff_message)
+
+                    if result is not True:
+                        output_filename = os.path.basename(output_file)
+                        file_differences[output_filename] = result
+                        success = False
+                        details.append(f"Differences in {output_filename}: {len(result)} differences found")
+
+                        diff_message = "\n".join(
+                            [d.get('message', 'Difference found') for d in result[:5]]
+                        )
+                        if len(result) > 5:
+                            diff_message += f"\n... and {len(result) - 5} more differences"
+                        details.append(diff_message)
         
         results[script_name] = {
             'passed': success,
