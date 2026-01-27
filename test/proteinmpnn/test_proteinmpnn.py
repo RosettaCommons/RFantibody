@@ -24,8 +24,8 @@ SCRIPT_CONFIGS = {
     "ab_seq_design.sh": {
         "description": "Design antibody sequences with ProteinMPNN",
         "output_files": [
-            "hu-4D5-8_Fv_dldesign_0.pdb",
-            "hu-4D5-8_Fv_dldesign_1.pdb"
+            "ab_des_0_dldesign_0.pdb",
+            "ab_des_0_dldesign_1.pdb"
         ]
     }
 }

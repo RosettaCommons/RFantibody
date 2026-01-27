@@ -261,12 +261,15 @@ class TestQuiverCLI:
                 f"Content mismatch between {old_tag} and {new_tag}"
 
         # Test score lines are renamed
-        original_scores = run_cmd(f'uv run qvscorefile {scored_qv}', cwd=work_dir)
-        renamed_scores = run_cmd(f'uv run qvscorefile renamed.qv', cwd=work_dir)
+        # qvscorefile writes to a .sc file with same name as input
+        run_cmd(f'uv run qvscorefile {scored_qv}', cwd=work_dir)
+        run_cmd(f'uv run qvscorefile renamed.qv', cwd=work_dir)
 
-        # Parse scores (skip header)
-        orig_df = pd.read_csv(pd.io.common.StringIO(original_scores), sep='\t')
-        new_df = pd.read_csv(pd.io.common.StringIO(renamed_scores), sep='\t')
+        # Read the generated .sc files
+        orig_sc = os.path.join(input_dir, 'designs_scored.sc')
+        renamed_sc = os.path.join(work_dir, 'renamed.sc')
+        orig_df = pd.read_csv(orig_sc, sep='\t')
+        new_df = pd.read_csv(renamed_sc, sep='\t')
 
         # Verify scores match (except tag column)
         for i, (old_tag, new_tag) in enumerate(zip(original_tags, new_tags)):
@@ -281,15 +284,18 @@ class TestQuiverCLI:
 
     def test_qvscorefile(self, input_dir, work_dir):
         """
-        Test that qvscorefile extracts scores correctly.
+        Test that qvscorefile extracts scores correctly to a .sc file.
         """
         scored_qv = os.path.join(input_dir, 'designs_scored.qv')
 
-        # Extract scores
-        output = run_cmd(f'uv run qvscorefile {scored_qv}', cwd=work_dir)
+        # Extract scores (writes to .sc file with same name as input)
+        run_cmd(f'uv run qvscorefile {scored_qv}', cwd=work_dir)
 
-        # Parse as TSV
-        df = pd.read_csv(pd.io.common.StringIO(output), sep='\t')
+        # Read the generated .sc file
+        sc_file = os.path.join(input_dir, 'designs_scored.sc')
+        assert os.path.exists(sc_file), f"Score file {sc_file} was not created"
+
+        df = pd.read_csv(sc_file, sep='\t')
 
         # Should have a 'tag' column
         assert 'tag' in df.columns, "Score file missing 'tag' column"

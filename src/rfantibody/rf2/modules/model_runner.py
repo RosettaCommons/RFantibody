@@ -10,6 +10,7 @@ from omegaconf import OmegaConf
 import rfantibody.rf2.modules.pose_util as pu
 import rfantibody.rf2.modules.rmsd as rmsd
 from rfantibody.rf2.network.predict import Predictor, pae_unbin
+from rfantibody.util.quiver import Quiver
 
 
 class AbPredictor(Predictor):
@@ -209,8 +210,16 @@ def write_output(to_write: OrderedDict, tag: str, conf: HydraConfig) -> None:
         pose = pu.reorder_pose_to_HLT(pose)
         pdblines=pu.pose_to_remarked_pdblines(pose, metrics=metrics)
         if qv:
-            output_qv=Quiver(f'{conf.output.quiver}.qv', mode='w')
-            pdblines=[f'QV_{line}' if line.startswith('SCORE') else line for line in pdblines]
-            output_quiver.add_pdb(pdblines, tag=f'{tag}_{suffix}')
+            output_quiver=Quiver(f'{conf.output.quiver}', mode='w')
+            # Filter out SCORE lines from pdblines - we'll add them via score_str
+            pdblines_no_scores = [line for line in pdblines if not line.startswith('SCORE')]
+            # Build score string in quiver format: key1=val1|key2=val2|...
+            score_parts = []
+            for k, v in metrics.items():
+                if torch.is_tensor(v):
+                    v = v.mean().item()
+                score_parts.append(f'{k}={v:.2f}')
+            score_str = '|'.join(score_parts) if score_parts else None
+            output_quiver.add_pdb(pdblines_no_scores, tag=f'{tag}_{suffix}', score_str=score_str)
         else:
             pu.pdblines_to_pdb(pdblines, f'{conf.output.pdb_dir}/{tag}_{suffix}.pdb')

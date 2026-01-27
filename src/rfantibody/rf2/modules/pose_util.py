@@ -10,6 +10,7 @@ import torch.nn.functional as F
 
 from rfantibody.rf2.modules import parsers, util
 from rfantibody.rf2.modules.util import Dotdict
+from rfantibody.util.quiver import Quiver
 
 
 @dataclass
@@ -405,7 +406,7 @@ def pose_generator(conf: HydraConfig) -> tuple[Pose, str]:
         raise ValueError("Must provide exactly one of quiver, remarked_pdb, or pdb_dir")
     
     if conf.input.quiver is not None:
-        quiver=Quiver(conf.quiver, mode='r')
+        quiver=Quiver(conf.input.quiver, mode='r')
         tags=quiver.get_tags()
 
         for tag in tags:

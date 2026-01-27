@@ -1,7 +1,0 @@
-# Base inference Configuration.
-defaults:
-  - base
-
-inference:
-  autoregressive_confidence: False
-  no_confidence: False

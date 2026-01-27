@@ -181,7 +181,7 @@ def get_done_list(conf: HydraConfig) -> list:
         strip=lambda x: os.path.splitext(os.path.basename(x))[0]
         return [strip(i)[:-5] for i in glob.glob(f'{conf.output.pdb_dir}/*_best.pdb')]
     elif conf.output.quiver is not None:
-        qv=Quiver(f'{conf.output.quiver}.qv', mode='r')
+        qv=Quiver(f'{conf.output.quiver}', mode='r')
         return qv.tags
     else:
         raise ValueError('Must specify output.pdb_dir or output.quiver')

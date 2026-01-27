@@ -15,6 +15,13 @@ import click
 from rfantibody.config import PathConfig
 
 
+def _resolve_path(path: Optional[Path]) -> Optional[Path]:
+    """Resolve a path to absolute, handling None values."""
+    if path is None:
+        return None
+    return Path(path).resolve()
+
+
 # =============================================================================
 # RFdiffusion CLI
 # =============================================================================
@@ -76,6 +83,13 @@ def rfdiffusion(
         # Output to Quiver file
         rfdiffusion -t antigen.pdb -f framework.pdb -q designs.qv -n 100
     """
+    # Resolve all paths to absolute (subprocess runs in different cwd)
+    target = _resolve_path(target)
+    framework = _resolve_path(framework)
+    output = _resolve_path(output)
+    output_quiver = _resolve_path(output_quiver)
+    weights = _resolve_path(weights)
+
     # Find the inference script
     script_path = PathConfig.SCRIPTS_DIR / 'rfdiffusion_inference.py'
     if not script_path.exists():
@@ -94,7 +108,7 @@ def rfdiffusion(
         cmd.append(f'inference.quiver={output_quiver}')
     else:
         # Ensure output directory exists
-        output_dir = Path(output).parent
+        output_dir = output.parent
         output_dir.mkdir(parents=True, exist_ok=True)
         cmd.append(f'inference.output_prefix={output}')
 
@@ -206,6 +220,13 @@ def proteinmpnn(
         click.echo('Error: Cannot specify both --input-dir and --input-quiver', err=True)
         sys.exit(1)
 
+    # Resolve all paths to absolute (subprocess runs in different cwd)
+    input_dir = _resolve_path(input_dir)
+    input_quiver = _resolve_path(input_quiver)
+    output_dir = _resolve_path(output_dir)
+    output_quiver = _resolve_path(output_quiver)
+    weights = _resolve_path(weights)
+
     # Find the inference script
     script_path = PathConfig.SCRIPTS_DIR / 'proteinmpnn_interface_design.py'
     if not script_path.exists():
@@ -225,7 +246,7 @@ def proteinmpnn(
     if output_quiver:
         cmd.extend(['-outquiver', str(output_quiver)])
     else:
-        Path(output_dir).mkdir(parents=True, exist_ok=True)
+        output_dir.mkdir(parents=True, exist_ok=True)
         cmd.extend(['-outpdbdir', str(output_dir)])
 
     # Design parameters
@@ -327,6 +348,14 @@ def rf2(
         click.echo('Error: Must specify --output-dir or --output-quiver', err=True)
         sys.exit(1)
 
+    # Resolve all paths to absolute (subprocess runs in different cwd)
+    input_pdb = _resolve_path(input_pdb)
+    input_dir = _resolve_path(input_dir)
+    input_quiver = _resolve_path(input_quiver)
+    output_dir = _resolve_path(output_dir)
+    output_quiver = _resolve_path(output_quiver)
+    weights = _resolve_path(weights)
+
     # Find the inference script
     script_path = PathConfig.SCRIPTS_DIR / 'rf2_predict.py'
     if not script_path.exists():
@@ -346,7 +375,7 @@ def rf2(
 
     # Output
     if output_dir:
-        Path(output_dir).mkdir(parents=True, exist_ok=True)
+        output_dir.mkdir(parents=True, exist_ok=True)
         cmd.append(f'output.pdb_dir={output_dir}')
     if output_quiver:
         cmd.append(f'output.quiver={output_quiver}')
