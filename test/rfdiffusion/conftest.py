@@ -7,6 +7,7 @@ Pytest configuration file for RFDiffusion tests.
 import os
 import shutil
 import tempfile
+from datetime import datetime
 
 import pytest
 import torch
@@ -36,17 +37,19 @@ def check_gpu():
 def output_dir(request):
     """
     Create and provide a temporary directory for test results.
-    
+
     By default, uses a system temporary directory that will be automatically
-    cleaned up. If --keep-outputs is specified, uses the fixed output path.
+    cleaned up. If --keep-outputs is specified, saves to a timestamped directory.
     """
-    # Check if we should keep outputs in the standard location
+    # Check if we should keep outputs in a timestamped directory
     keep_outputs = request.config.getoption("--keep-outputs", default=False)
-    
+
     if keep_outputs:
-        # Use a dedicated path in the module test directory for inspection
-        output_path = "test/rfdiffusion/example_outputs"
+        # Create a timestamped directory for inspection
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_path = f"test/rfdiffusion/example_outputs_{timestamp}"
         os.makedirs(output_path, exist_ok=True)
+        print(f"Saving test outputs to: {output_path}")
         return output_path
     else:
         # Create a temporary directory that will be automatically cleaned up
@@ -81,8 +84,8 @@ def ref_dir():
 
 @pytest.fixture(scope="session")
 def clean_output_dir(output_dir):
-    """Clean the output directory before and after tests"""
-    # Clean before tests
+    """Clean the output directory before tests"""
+    # Clean before tests (only needed if directory already exists)
     if os.path.exists(output_dir):
         for f in os.listdir(output_dir):
             file_path = os.path.join(output_dir, f)
@@ -93,9 +96,9 @@ def clean_output_dir(output_dir):
                     shutil.rmtree(file_path)
             except Exception as e:
                 print(f"Error cleaning {file_path}: {e}")
-    
+
     # Run tests
     yield
-    
-    # By default, temporary directories are automatically cleaned up
-    # If using fixed path (--keep-outputs), we leave files for inspection 
+
+    # Temporary directories are automatically cleaned up
+    # Timestamped directories (--keep-outputs) are kept for inspection 

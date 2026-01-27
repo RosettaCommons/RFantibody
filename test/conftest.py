@@ -10,8 +10,8 @@ import pytest
 def pytest_addoption(parser):
     """Add custom command line options to pytest."""
     parser.addoption(
-        "--keep-outputs", 
-        action="store_true", 
+        "--keep-outputs",
+        action="store_true",
         default=False,
-        help="Keep test outputs in standard directory instead of using temporary directory"
+        help="Save test outputs to a timestamped directory for later inspection"
     )
