@@ -52,8 +52,9 @@ def align_to_subset(pose1: "Pose", pose2: "Pose", subset: str) -> bool:
     xyz2_subset = xyz2_ca[mask_np]
 
     # Use biotite to get the superimposition transformation
-    # superimpose returns (fitted, transformation)
-    _, transformation = struc.superimpose(xyz1_subset, xyz2_subset)
+    # superimpose(fixed, mobile) returns transformation to align mobile onto fixed
+    # We want to align pose1 (mobile) onto pose2 (fixed)
+    _, transformation = struc.superimpose(xyz2_subset, xyz1_subset)
 
     # Apply transformation to all atoms in pose1
     # Reshape for biotite: (L * n_atoms, 3)

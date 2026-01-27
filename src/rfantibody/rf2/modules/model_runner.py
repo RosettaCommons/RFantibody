@@ -191,7 +191,9 @@ def get_rmsds(pose1: Pose, pose2: Pose, metrics: dict) -> None:
     
 def write_output(to_write: OrderedDict, tag: str, conf: HydraConfig) -> None:
     """
-    Writes output to file. Either pdb or quiver file
+    Writes output to file. Either pdb or quiver file.
+    Outputs are written in HLT format (Heavy, Light, Target) for consistency
+    with standard antibody conventions.
     """
     if sum([var is not None for var in [conf.output.pdb_dir, conf.output.quiver]]) != 1:
         raise ValueError('Exactly one of output.pdb_dir or output.quiver must be specified')
@@ -203,6 +205,8 @@ def write_output(to_write: OrderedDict, tag: str, conf: HydraConfig) -> None:
             suffix = f'cycle_{key}'
         pose = val['pose']
         metrics = val['metrics']
+        # Reorder from internal THL order to output HLT order
+        pose = pu.reorder_pose_to_HLT(pose)
         pdblines=pu.pose_to_remarked_pdblines(pose, metrics=metrics)
         if qv:
             output_qv=Quiver(f'{conf.output.quiver}.qv', mode='w')

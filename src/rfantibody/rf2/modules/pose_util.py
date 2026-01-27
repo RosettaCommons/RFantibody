@@ -295,6 +295,32 @@ def masked_pose(pose: Pose, mask: torch.Tensor) -> Pose:
     chain_dict={ch: pose.chain_dict[ch][mask] for ch in ['H', 'L', 'T']}
     return Pose(**split_attrs, cdrs=cdrs, chain_dict=chain_dict)
 
+def reorder_pose_to_HLT(pose: Pose) -> Pose:
+    """
+    Reorders a pose from THL order (used internally by RF2) to HLT order (standard output format).
+    Returns a new Pose object with chains in H-L-T order.
+    """
+    # Find indices for each chain
+    H_indices = torch.where(pose.chain_dict['H'])[0].tolist()
+    L_indices = torch.where(pose.chain_dict['L'])[0].tolist()
+    T_indices = torch.where(pose.chain_dict['T'])[0].tolist()
+
+    # Create new ordering: H, L, T
+    new_order = H_indices + L_indices + T_indices
+    new_order_tensor = torch.tensor(new_order, dtype=torch.long)
+
+    # Reorder all tensor attributes
+    attributes = ['xyz', 'seq', 'atom_mask', 'hotspots', 'idx']
+    reordered_attrs = {attr: getattr(pose, attr)[new_order_tensor] for attr in attributes}
+
+    # Reorder CDR masks
+    cdrs = CDR(**{ch: getattr(pose.cdrs, ch)[new_order_tensor] for ch in pose.cdrs.cdr_names()})
+
+    # Reorder chain_dict masks
+    chain_dict = OrderedDict({ch: pose.chain_dict[ch][new_order_tensor] for ch in ['H', 'L', 'T']})
+
+    return Pose(**reordered_attrs, cdrs=cdrs, chain_dict=chain_dict)
+
 def pose_from_remarked(pdb_path: str) -> Pose:
     """
     Builds a pose object from a pdb file in HLT remarked format
