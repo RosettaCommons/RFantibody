@@ -83,9 +83,11 @@ def mask_hotspots(pose: "Pose", show_proportion: float) -> torch.Tensor[bool]:
         return hotspots
 
     true_indices = np.where(hotspots)[0]
+    # Calculate how many to HIDE (inverse of show_proportion)
+    hide_proportion = 1 - show_proportion
     indices_to_convert = np.random.choice(
         true_indices,
-        size=random_round(show_proportion * len(true_indices)),
+        size=random_round(hide_proportion * len(true_indices)),
         replace=False,
     )
     hotspots[indices_to_convert] = False
