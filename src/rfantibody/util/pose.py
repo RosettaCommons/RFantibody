@@ -94,13 +94,13 @@ class Pose():
         # We will collect the consecutive chains in the pose
 
         # Find the indices where the value changes
-        change_indices = np.where(np.diff(self.chains) != 0)[0] + 1
+        change_indices = np.where(np.diff(self.chain) != 0)[0] + 1
 
         # Include the first element as it is always unique in this context
         unique_indices = np.insert(change_indices, 0, 0)
 
         # Get the consecutive unique chains
-        unique_chains = self.chains[unique_indices]
+        unique_chains = self.chain[unique_indices]
 
         # Check two things about these chains:
         # 1. The chains must be unique ie. there are no dis-contiguous chains

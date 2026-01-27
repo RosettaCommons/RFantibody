@@ -227,7 +227,7 @@ class CDR:
     
     @property
     def cdrs_present(self) -> list:
-        return [self.cdr_names[idx] for idx, i in enumerate(self.cdrs) if i.sum() > 0]
+        return [self.cdr_names()[idx] for idx, i in enumerate(self.cdrs) if i.sum() > 0]
 
     @property
     def total_cdr_length(self) -> int:

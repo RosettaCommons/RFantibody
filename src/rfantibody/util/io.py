@@ -66,10 +66,10 @@ def ab_write_pdblines(
 
     ctr = 1
     if bfacts is None:
-        bfacts = torch.zeros(atoms.shape[0])
+        bfacts = np.zeros(atoms.shape[0])
     if idx_pdb is None:
         # Default to 1-indexed residue numbers
-        idx_pdb = 1 + torch.arange(atoms.shape[0])
+        idx_pdb = 1 + np.arange(atoms.shape[0])
 
     Bfacts = np.clip(
         bfacts,

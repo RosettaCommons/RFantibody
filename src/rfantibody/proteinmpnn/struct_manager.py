@@ -54,20 +54,46 @@ class StructManager():
 
         assert self.input_pdb ^ self.input_quiver, 'Exactly one input source (pdbdir or quiver) must be specified'
 
-        # Setup checkpointing
-        self.chkfn = args.checkpoint_name
+        # Setup checkpointing - determine finished structures based on output type
         self.finished_structs = set()
 
-        if os.path.isfile(self.chkfn):
-            with open(self.chkfn, 'r') as f:
-                for line in f:
-                    self.finished_structs.add(line.strip())
+        if self.output_quiver:
+            # When using quiver output, check existing tags in the output quiver
+            # Output tags follow pattern: {input_tag}_dldesign_{idx}
+            # So we extract the base input tag from existing output tags
+            self.chkfn = None  # No checkpoint file needed for quiver output
+            existing_tags = self.outquiver.get_tags()
+            for tag in existing_tags:
+                # Extract input tag from output tag (remove _dldesign_N suffix)
+                if '_dldesign_' in tag:
+                    input_tag = tag.rsplit('_dldesign_', 1)[0]
+                    self.finished_structs.add(input_tag)
+        else:
+            # For PDB output, use checkpoint file next to the output directory
+            if args.checkpoint_name != 'check.point':
+                # User specified a custom checkpoint name, use it as-is
+                self.chkfn = args.checkpoint_name
+            else:
+                # Default: put checkpoint file next to output directory
+                self.chkfn = os.path.join(self.outpdbdir, 'check.point')
+                # Ensure output directory exists for checkpoint file
+                if not os.path.exists(self.outpdbdir):
+                    os.makedirs(self.outpdbdir)
+
+            if os.path.isfile(self.chkfn):
+                with open(self.chkfn, 'r') as f:
+                    for line in f:
+                        self.finished_structs.add(line.strip())
 
     def record_checkpoint(self, tag: str) -> None:
         '''
         Record the fact that this tag has been processed.
-        Write this tag to the list of finished structs
+        Write this tag to the list of finished structs.
+        For quiver output, this is a no-op since the quiver file itself tracks what's been written.
         '''
+        if self.chkfn is None:
+            # Using quiver output - no checkpoint file needed
+            return
         with open(self.chkfn, 'a') as f:
             f.write(f'{tag}\n')
 
@@ -114,7 +140,7 @@ class StructManager():
         if self.input_pdb:
             pose = Pose.from_pdb(tag)
         elif self.input_quiver:
-            pose = Pose.from_pdblines(self.inquiver.get_pdb(tag))
+            pose = Pose.from_pdblines(self.inquiver.get_pdblines(tag))
         else:
             raise Exception('Neither input_pdb nor input_quiver is set to True. Cannot load pose')
 
