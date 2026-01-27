@@ -21,6 +21,7 @@ uv run python -m test.run_tests --module rfdiffusion
 uv run python -m test.run_tests --module proteinmpnn
 uv run python -m test.run_tests --module rf2
 uv run python -m test.run_tests --module util
+uv run python -m test.run_tests --module quiver
 ```
 
 ### Keep test outputs for inspection
@@ -71,15 +72,30 @@ test/
 │   └── (same structure)
 ├── rf2/
 │   └── (same structure)
-└── util/
-    └── (same structure)
+├── util/
+│   └── (same structure)
+└── quiver/
+    ├── conftest.py       # Module pytest config
+    ├── test_quiver.py    # CLI tests (no GPU required)
+    └── inputs_for_test/  # Test PDB and quiver files
 ```
 
 ## How Tests Work
 
+### GPU-based tests (rfdiffusion, proteinmpnn, rf2)
+
 1. Test scripts in `scripts/` run the CLI commands with deterministic settings
 2. Outputs are compared against GPU-specific reference files
 3. Tests pass if outputs match references (with tolerance for floating-point differences)
+
+### Quiver CLI tests
+
+1. Tests run without GPU requirements
+2. Tests verify CLI commands work correctly by:
+   - Creating quiver files from PDBs and extracting them back
+   - Checking that file content is preserved through operations
+   - Verifying tag listings, slicing, splitting, and renaming work correctly
+3. No reference files needed - tests are self-verifying
 
 ## Running Individual Test Scripts
 

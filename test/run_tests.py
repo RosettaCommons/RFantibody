@@ -32,15 +32,16 @@ def main():
     
     # Determine which modules to test
     modules = []
+    all_modules = ['rfdiffusion', 'proteinmpnn', 'rf2', 'util', 'quiver']
     if args.module == 'all':
-        modules = ['rfdiffusion', 'proteinmpnn', 'rf2', 'util']
+        modules = all_modules
     else:
         modules = [args.module]
-    
+
     # Validate module selection
     for module in modules:
-        if module not in ['rfdiffusion', 'proteinmpnn', 'rf2', 'util']:
-            print(f"Error: Unknown module '{module}'. Choose from: rfdiffusion, proteinmpnn, rf2, util, all")
+        if module not in all_modules:
+            print(f"Error: Unknown module '{module}'. Choose from: {', '.join(all_modules)}, all")
             return 1
     
     # If creating reference files, run scripts and copy outputs for each module
