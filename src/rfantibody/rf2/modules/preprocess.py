@@ -89,7 +89,8 @@ class Preprocess:
         T,L = inputs.xyz_t.shape[:2]
 
         # xyzs
-        xyz_t, xyz_true, xyz_prev=get_xyzs(inputs)
+        seed = getattr(self.conf.inference, 'seed', None) if hasattr(self.conf, 'inference') else None
+        xyz_t, xyz_true, xyz_prev=get_xyzs(inputs, seed=seed)
         
         # seq/MSA
         seq = inputs.seq
@@ -131,10 +132,17 @@ def check_inputs(inputs: Dotdict) -> None:
         raise ValueError(f'token in sequence is > 21, max is {torch.max(inputs.seq)}')
 
 @check_for_nans
-def get_xyzs(inputs: Dotdict) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+def get_xyzs(inputs: Dotdict, seed: int = None) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Gets xyzs from inputs
+
+    Args:
+        inputs: Input dictionary containing xyz_t, mask_t, xyz_true
+        seed: Random seed for xyz initialization (optional, for deterministic mode)
     """
+    # Set seed right before xyz initialization to ensure reproducibility
+    if seed is not None:
+        torch.manual_seed(seed)
     xyz_t=util.get_init_xyz(inputs.xyz_t, inputs.mask_t)
     xyz_true = torch.nan_to_num(inputs.xyz_true)
     xyz_prev = xyz_t[0].clone()
@@ -198,8 +206,10 @@ def make_t2d(inputs: Dotdict, xyz_t: torch.Tensor, pose: "Pose") -> tuple[torch.
     mask_t_2d = mask_t_2d[:,:,None]*mask_t_2d[:,:,:,None] # (B, T, L, L)
     assert mask_t_2d.shape[1] == 1
 
-    mask_t_2d[0,0,:pose.antibody_length,:] = False
-    mask_t_2d[0,0,:,:pose.antibody_length] = False
+    # With T-H-L ordering, antibody is at the END, so mask last antibody_length residues
+    # (Previously masked first antibody_length, which was correct for H-L-T ordering)
+    mask_t_2d[0,0,-pose.antibody_length:,:] = False
+    mask_t_2d[0,0,:,-pose.antibody_length:] = False
 
     t2d = kinematics.xyz_to_t2d(xyz_t.unsqueeze(0), mask_t_2d) # [B,T,L,L,44], this function requires a batch dimension
     t2d = t2d.squeeze(0) # [T,L,L,44]
@@ -271,16 +281,36 @@ def pose_to_inference_RFinput(pose: "Pose", conf: HydraConfig) -> Dotdict:
 
 def make_RF_idx(pose) -> torch.Tensor:
     """
-    Makes the idx feature to RF, adding a 200 residue offset between chains
+    Makes the idx feature to RF, adding a 200 residue offset between chains.
+    Convention (matching rf_antibody):
+    - Target (T) chain: starts at 0
+    - Antibody chains (H, L): always get 200-residue buffer, even when first
+
+    Examples:
+    - With target (T=251, H=121, L=106): T:0-250, H:451-571, L:772-877
+    - Without target (H=121, L=106): H:200-320, L:521-626
     """
     idx=[]
-    lastidx=0
-    for i,ch in enumerate(pose.chains_present):
-        chain_idx=pose.idx[pose.chain_dict[ch]]
-        chain_idx -= chain_idx[0].clone()
-        if i != 0:
-            chain_idx += 200 + lastidx
-        lastidx=chain_idx[-1]
+    lastidx = -1  # Start at -1 so first antibody chain offset calculation works
+
+    for i, ch in enumerate(pose.chains_present):
+        chain_mask = pose.chain_dict[ch]
+        chain_length = chain_mask.sum().item()
+
+        # Create sequential indices starting from 0 for this chain
+        chain_idx = torch.arange(chain_length, dtype=torch.int64)
+
+        # Add offset based on chain type:
+        # - Target (T) starts at 0
+        # - Antibody chains (H, L) always get previous_end + 1 + 200
+        if ch == 'T':
+            # Target starts at 0, no offset
+            pass
+        else:
+            # Antibody chains: add offset from previous chain + 200 buffer
+            chain_idx = chain_idx + (lastidx + 1) + 200
+
+        lastidx = chain_idx[-1].item()
         idx.append(chain_idx)
 
     return torch.cat(idx)

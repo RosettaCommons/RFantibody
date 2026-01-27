@@ -46,6 +46,7 @@ class AbPredictor(Predictor):
             ) = self.preprocess_fn(pose, device=self.device)
         
         network_input = self._add_batch_dim(network_input)
+
         outputs = [
             "msa_prev",
             "pair_prev",
@@ -53,7 +54,7 @@ class AbPredictor(Predictor):
             "xyz_prev",
             "alpha",
             "mask_recycle",
-        ]    
+        ]
         output_i = (None, None, None, xyz_prev[None], None, mask_recycle)
         output_i = {outputs[i]: val for i, val in enumerate(output_i)}
         msa_prev = pair_prev = None
@@ -65,12 +66,12 @@ class AbPredictor(Predictor):
             for i_cycle in range(self.conf.inference.num_recycles + 1):
                 output_i={i:val for i, val in output_i.items() if i in outputs}
                 input_i={**network_input, **output_i}
-                
-                # TODO clean this up
+
                 input_i.pop('alpha',None)
                 input_i['xyz_t'] = input_i['xyz_t'].clone()[...,1,:]
-                
+
                 output_i=self._output_dictionary(self.model(**input_i), input_i)
+
                 output_pose_i = pu.pose_from_RF_output(output_i, pose)
                 metrics_i=self._process_output(output_i, output_pose_i, pose)
                 
@@ -165,6 +166,10 @@ def get_rmsds(pose1: Pose, pose2: Pose, metrics: dict) -> None:
         Ca rmsd of CDRs (aligned on framework)
         Ca rmsd of each CDR (aligned on framework)
     """
+    # Copy poses to avoid modifying them in-place
+    pose1 = copy.deepcopy(pose1)
+    pose2 = copy.deepcopy(pose2)
+
     # target-aligned rmsds
     rmsd.tmalign_to_subset(pose1, pose2, subset='target')
     metrics['target_aligned_antibody_rmsd'] = rmsd.calc_prealigned_rmsd(pose1, pose2, pose1.antibody_mask)
