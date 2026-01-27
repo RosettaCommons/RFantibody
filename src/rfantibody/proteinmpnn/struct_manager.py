@@ -15,13 +15,16 @@ class StructManager():
     def __init__(self, args) -> None:
         self.args = args
 
-        self.pdb = False
-        if not args.pdbdir == '':
-            self.pdb = True
+        # Track input and output formats separately
+        self.input_pdb = False
+        self.input_quiver = False
+        self.output_pdb = False
+        self.output_quiver = False
 
+        # Setup input from PDB directory
+        if args.pdbdir != '':
+            self.input_pdb = True
             self.pdbdir = args.pdbdir
-            self.outpdbdir = args.outpdbdir
-
             self.struct_iterator = glob.glob(os.path.join(args.pdbdir, '*.pdb'))
 
             # Parse the runlist and determine which structures to process
@@ -35,16 +38,21 @@ class StructManager():
 
                     print(f'After filtering by runlist, {len(self.struct_iterator)} structures remain')
 
-        self.quiver = False
-        if not args.quiver == '':
-            self.quiver = True
-
+        # Setup input from quiver file
+        if args.quiver != '':
+            self.input_quiver = True
             self.inquiver = Quiver(args.quiver, mode='r')
-            self.outquiver = Quiver(args.outquiver, mode='w')
-
             self.struct_iterator = self.inquiver.get_tags()
 
-        assert self.pdb ^ self.quiver, 'Either pdb or quiver must be set to True'
+        # Setup output - quiver takes precedence over pdb
+        if args.outquiver != '':
+            self.output_quiver = True
+            self.outquiver = Quiver(args.outquiver, mode='w')
+        else:
+            self.output_pdb = True
+            self.outpdbdir = args.outpdbdir
+
+        assert self.input_pdb ^ self.input_quiver, 'Exactly one input source (pdbdir or quiver) must be specified'
 
         # Setup checkpointing
         self.chkfn = args.checkpoint_name
@@ -83,9 +91,9 @@ class StructManager():
         tag: str,
     ) -> None:
         '''
-        Dump this pose to either a pdb file, or quiver file depending on the input arguments
+        Dump this pose to either a pdb file, or quiver file depending on the output arguments
         '''
-        if self.pdb:
+        if self.output_pdb:
             # If the outpdbdir does not exist, create it
             # If there are parents in the path that do not exist, create them as well
             if not os.path.exists(self.outpdbdir):
@@ -93,23 +101,21 @@ class StructManager():
 
             pdbfile = os.path.join(self.outpdbdir, tag + '.pdb')
             pose.dump_pdb(pdbfile)
-        
-        if self.quiver:
+
+        if self.output_quiver:
             pdblines = pose.to_pdblines()
             self.outquiver.add_pdb(pdblines, tag)
 
     def load_pose(self, tag: str) -> Pose:
         '''
-        Load a pose from either a silent file, pdb file, or quiver file depending on the input arguments
+        Load a pose from either a pdb file or quiver file depending on the input arguments
         '''
 
-        if not self.pdb and not self.quiver:
-            raise Exception('Neither pdb nor quiver is set to True. Cannot load pose')
-
-        if self.pdb:
+        if self.input_pdb:
             pose = Pose.from_pdb(tag)
-        
-        if self.quiver:
+        elif self.input_quiver:
             pose = Pose.from_pdblines(self.inquiver.get_pdb(tag))
+        else:
+            raise Exception('Neither input_pdb nor input_quiver is set to True. Cannot load pose')
 
         return pose

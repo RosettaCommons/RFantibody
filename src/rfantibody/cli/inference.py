@@ -182,6 +182,8 @@ def rfdiffusion(
               help='Enable deterministic mode for reproducibility')
 @click.option('--debug', is_flag=True,
               help='Enable debug mode (crash on errors)')
+@click.option('--allow-x', is_flag=True,
+              help='Allow X (unknown) residues in output for debugging')
 def proteinmpnn(
     input_dir: Optional[Path],
     input_quiver: Optional[Path],
@@ -194,7 +196,8 @@ def proteinmpnn(
     omit_aas: str,
     augment_eps: Optional[float],
     deterministic: bool,
-    debug: bool
+    debug: bool,
+    allow_x: bool
 ):
     """Run ProteinMPNN sequence design for antibodies.
 
@@ -270,6 +273,8 @@ def proteinmpnn(
         cmd.append('-deterministic')
     if debug:
         cmd.append('-debug')
+    if allow_x:
+        cmd.append('-allow_x')
 
     input_source = input_dir or input_quiver
     click.echo(f'Running ProteinMPNN sequence design...')
@@ -304,6 +309,8 @@ def proteinmpnn(
               help='Random seed for reproducibility')
 @click.option('--cautious/--no-cautious', default=True,
               help='Skip existing outputs (default: True)')
+@click.option('--hotspot-show-prop', type=float, default=0.1,
+              help='Proportion of hotspot residues to show to model (default: 0.1)')
 @click.option('--extra', '-e', type=str, multiple=True,
               help='Extra Hydra overrides (can be specified multiple times)')
 def rf2(
@@ -316,6 +323,7 @@ def rf2(
     weights: Optional[Path],
     seed: Optional[int],
     cautious: bool,
+    hotspot_show_prop: float,
     extra: tuple
 ):
     """Run RF2 antibody structure prediction.
@@ -333,6 +341,9 @@ def rf2(
 
         # Predict from Quiver to Quiver
         rf2 -q designs.qv --output-quiver predictions.qv
+
+        # Predict with higher hotspot visibility
+        rf2 -p antibody.pdb -o predictions/ --hotspot-show-prop 0.5
     """
     # Validate input
     inputs_provided = sum([input_pdb is not None, input_dir is not None, input_quiver is not None])
@@ -383,6 +394,7 @@ def rf2(
     # Inference parameters
     cmd.append(f'inference.num_recycles={num_recycles}')
     cmd.append(f'inference.cautious={cautious}')
+    cmd.append(f'inference.hotspot_show_proportion={hotspot_show_prop}')
 
     # Model weights
     if weights:
@@ -404,6 +416,7 @@ def rf2(
     click.echo(f'Running RF2 structure prediction...')
     click.echo(f'Input: {input_source}')
     click.echo(f'Recycles: {num_recycles}')
+    click.echo(f'Hotspot show proportion: {hotspot_show_prop}')
 
     result = subprocess.run(cmd, cwd=str(PathConfig.PROJECT_ROOT))
     sys.exit(result.returncode)

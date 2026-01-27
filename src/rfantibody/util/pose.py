@@ -72,7 +72,8 @@ class Pose():
         }
 
         for cdr, mask in cdr_masks.items():
-            cdr_dict[cdr] = np.where(mask)[0].tolist()
+            # Convert to 1-indexed as documented in cdr_dict
+            cdr_dict[cdr] = [i + 1 for i in np.where(mask)[0].tolist()]
 
         return cls(
             atoms=bb_xyz,

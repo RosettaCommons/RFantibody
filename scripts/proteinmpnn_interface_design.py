@@ -21,7 +21,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-pdbdir", type=str, default="", help='The name of a directory of pdbs to run through the model')
 parser.add_argument("-quiver", type=str, default="", help='The name of a quiver file to run this metric on.')
 
-parser.add_argument("-outquiver", type=str, default="out.qv",
+parser.add_argument("-outquiver", type=str, default="",
                     help="The name of the quiver file to which output structs will be written")
 parser.add_argument("-outpdbdir", type=str, default="outputs",
                     help='The directory to which the output PDB files will be written')
@@ -55,6 +55,8 @@ parser.add_argument("-omit_AAs", type=str, default='CX',
 parser.add_argument("-num_connections", type=int, default=48,
                     help='Number of neighbors each residue is connected to, default 48, higher number leads to ' + \
                          'better interface design but will cost more to run the model.')
+parser.add_argument("-allow_x", action="store_true", default=False,
+                    help='Allow X (unknown) residues in output. Useful for debugging to see exactly which positions were designed.')
 
 args = parser.parse_args(sys.argv[1:])
 
@@ -99,6 +101,7 @@ class ProteinMPNN_runner():
         self.temperature = args.temperature
         self.seqs_per_struct = args.seqs_per_struct
         self.omit_AAs = [ letter for letter in args.omit_AAs.upper() if letter in list("ARNDCQEGHILKMFPSTWYVX") ]
+        self.allow_x = args.allow_x
 
     def sequence_optimize(self, sample_feats: SampleFeatures) -> list[tuple[str, float]]:
         t0 = time.time()
@@ -111,7 +114,7 @@ class ProteinMPNN_runner():
 
         os.remove(pdbfile)
 
-        arg_dict = mpnn_util.set_default_args(self.seqs_per_struct , omit_AAs=self.omit_AAs)
+        arg_dict = mpnn_util.set_default_args(self.seqs_per_struct, omit_AAs=self.omit_AAs, allow_x=self.allow_x)
         arg_dict['temperature'] = self.temperature
 
         masked_chains = sample_feats.chains[:-1]
