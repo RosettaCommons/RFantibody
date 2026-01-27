@@ -120,12 +120,11 @@ def qvextractspecific(quiver_file: Path, tags: tuple, output_dir: Optional[Path]
 def qvscorefile(quiver_file: Path):
     """Extract scores from a Quiver file to a tab-separated scorefile.
 
-    Output is written to stdout. Use shell redirection to save to a file.
+    Output is written to a .sc file with the same name as the input file.
 
     \b
     Examples:
-        qvscorefile designs.qv > scores.tsv
-        qvscorefile designs.qv | head -20
+        qvscorefile designs.qv  # creates designs.sc
     """
     records = []
 
@@ -152,7 +151,9 @@ def qvscorefile(quiver_file: Path):
         sys.exit(1)
 
     df = pd.DataFrame.from_records(records)
-    df.to_csv(sys.stdout, sep='\t', na_rep='NaN', index=False)
+    output_file = quiver_file.with_suffix('.sc')
+    df.to_csv(output_file, sep='\t', na_rep='NaN', index=False)
+    click.echo(f'Wrote {len(records)} scores to {output_file}')
 
 
 @click.command()
