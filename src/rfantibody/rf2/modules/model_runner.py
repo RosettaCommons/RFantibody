@@ -165,25 +165,29 @@ def get_rmsds(pose1: Pose, pose2: Pose, metrics: dict) -> None:
         Ca rmsd of antibody monomer (aligned on framework)
         Ca rmsd of CDRs (aligned on framework)
         Ca rmsd of each CDR (aligned on framework)
+
+    If target or framework lengths don't match between poses, RMSD calculations are skipped.
     """
     # Copy poses to avoid modifying them in-place
     pose1 = copy.deepcopy(pose1)
     pose2 = copy.deepcopy(pose2)
 
     # target-aligned rmsds
-    rmsd.tmalign_to_subset(pose1, pose2, subset='target')
-    metrics['target_aligned_antibody_rmsd'] = rmsd.calc_prealigned_rmsd(pose1, pose2, pose1.antibody_mask)
-    metrics['target_aligned_cdr_rmsd'] = rmsd.calc_prealigned_rmsd(pose1, pose2, pose1.cdrs.mask_1d)
+    target_aligned = rmsd.align_to_subset(pose1, pose2, subset='target')
+    if target_aligned:
+        metrics['target_aligned_antibody_rmsd'] = rmsd.calc_prealigned_rmsd(pose1, pose2, pose1.antibody_mask)
+        metrics['target_aligned_cdr_rmsd'] = rmsd.calc_prealigned_rmsd(pose1, pose2, pose1.cdrs.mask_1d)
 
     # framework-aligned monomer rmsds
-    rmsd.tmalign_to_subset(pose1, pose2, subset='framework')
-    metrics['framework_aligned_antibody_rmsd'] = rmsd.calc_prealigned_rmsd(pose1, pose2, pose1.antibody_mask)
-    metrics['framework_aligned_cdr_rmsd'] = rmsd.calc_prealigned_rmsd(pose1, pose2, pose1.cdrs.mask_1d)
+    framework_aligned = rmsd.align_to_subset(pose1, pose2, subset='framework')
+    if framework_aligned:
+        metrics['framework_aligned_antibody_rmsd'] = rmsd.calc_prealigned_rmsd(pose1, pose2, pose1.antibody_mask)
+        metrics['framework_aligned_cdr_rmsd'] = rmsd.calc_prealigned_rmsd(pose1, pose2, pose1.cdrs.mask_1d)
 
-    # individual loop rmsds
-    # pose1 is already framework-aligned
-    for loop in pose1.cdrs.cdr_names():
-        metrics[f'framework_aligned_{loop}_rmsd'] = rmsd.calc_prealigned_rmsd(pose1, pose2, getattr(pose1.cdrs, f'{loop}'))
+        # individual loop rmsds
+        # pose1 is already framework-aligned
+        for loop in pose1.cdrs.cdr_names():
+            metrics[f'framework_aligned_{loop}_rmsd'] = rmsd.calc_prealigned_rmsd(pose1, pose2, getattr(pose1.cdrs, f'{loop}'))
     
 def write_output(to_write: OrderedDict, tag: str, conf: HydraConfig) -> None:
     """
