@@ -1,15 +1,15 @@
+import argparse
 import os
+import random
 import sys
 import time
-import argparse
-import time
 
+import numpy as np
 import torch
 
 import rfantibody.proteinmpnn.util_protein_mpnn as mpnn_util
-from rfantibody.proteinmpnn.struct_manager import StructManager
 from rfantibody.proteinmpnn.sample_features import SampleFeatures
-
+from rfantibody.proteinmpnn.struct_manager import StructManager
 
 #################################
 # Parse Arguments
@@ -21,7 +21,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-pdbdir", type=str, default="", help='The name of a directory of pdbs to run through the model')
 parser.add_argument("-quiver", type=str, default="", help='The name of a quiver file to run this metric on.')
 
-parser.add_argument("-outquiver", type=str, default="out.qv",
+parser.add_argument("-outquiver", type=str, default="",
                     help="The name of the quiver file to which output structs will be written")
 parser.add_argument("-outpdbdir", type=str, default="outputs",
                     help='The directory to which the output PDB files will be written')
@@ -32,6 +32,8 @@ parser.add_argument("-checkpoint_name", type=str, default='check.point',
 parser.add_argument("-debug", action="store_true", default=False,
                     help='When active, errors will cause the script to crash and the error message ' + \
                          'to be printed out (default: False)')
+parser.add_argument("-deterministic", action="store_true", default=False,
+                    help='Enable deterministic mode by setting fixed seeds and deterministic algorithms (default: False)')
 
 # Design Arguments
 parser.add_argument("-loop_string", type=str, default='H1,H2,H3,L1,L2,L3',
@@ -53,8 +55,23 @@ parser.add_argument("-omit_AAs", type=str, default='CX',
 parser.add_argument("-num_connections", type=int, default=48,
                     help='Number of neighbors each residue is connected to, default 48, higher number leads to ' + \
                          'better interface design but will cost more to run the model.')
+parser.add_argument("-allow_x", action="store_true", default=False,
+                    help='Allow X (unknown) residues in output. Useful for debugging to see exactly which positions were designed.')
 
 args = parser.parse_args(sys.argv[1:])
+
+# Set up deterministic mode if requested
+if args.deterministic:
+    print("Setting up deterministic mode with fixed seeds")
+    # Set fixed seeds for reproducibility
+    random.seed(42)
+    np.random.seed(42)
+    torch.manual_seed(42)
+    torch.cuda.manual_seed_all(42)
+    
+    # Enable deterministic behavior
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 class ProteinMPNN_runner():
     '''
@@ -84,6 +101,7 @@ class ProteinMPNN_runner():
         self.temperature = args.temperature
         self.seqs_per_struct = args.seqs_per_struct
         self.omit_AAs = [ letter for letter in args.omit_AAs.upper() if letter in list("ARNDCQEGHILKMFPSTWYVX") ]
+        self.allow_x = args.allow_x
 
     def sequence_optimize(self, sample_feats: SampleFeatures) -> list[tuple[str, float]]:
         t0 = time.time()
@@ -96,7 +114,7 @@ class ProteinMPNN_runner():
 
         os.remove(pdbfile)
 
-        arg_dict = mpnn_util.set_default_args(self.seqs_per_struct , omit_AAs=self.omit_AAs)
+        arg_dict = mpnn_util.set_default_args(self.seqs_per_struct, omit_AAs=self.omit_AAs, allow_x=self.allow_x)
         arg_dict['temperature'] = self.temperature
 
         masked_chains = sample_feats.chains[:-1]

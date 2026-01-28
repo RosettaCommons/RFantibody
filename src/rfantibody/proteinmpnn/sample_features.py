@@ -5,6 +5,7 @@ import numpy as np
 from rfantibody.proteinmpnn.util_protein_mpnn import aa_1_3
 from rfantibody.util.pose import Pose
 
+
 class SampleFeatures():
     '''
     This is a struct which keeps all the features related to a single sample together
@@ -39,6 +40,15 @@ class SampleFeatures():
 
         desloops = [l.upper() for l in loop_string.split(',')]
 
+        # Assert correct chain ordering with T (target) last for interface design
+        chains = np.unique(self.pose.chain).tolist()
+        valid_orderings = [['H', 'L', 'T'], ['H', 'T']]
+        assert chains in valid_orderings, (
+            f"Invalid chain ordering: {chains}. "
+            f"Expected one of {valid_orderings}. "
+            "Chains must be in H-L-T order with T (target) last for interface design."
+        )
+
         fixed_res = {}
 
         nchains = self.pose.chain.size
@@ -64,6 +74,12 @@ class SampleFeatures():
         for loop in desloops:
             if 'L' in loop:
                 loopL += self.pose.cdr_dict[loop]
+
+        # Assert that we found at least one residue to design
+        assert len(loopH) + len(loopL) > 0, (
+            f"No designable residues found for requested loops: {desloops}. "
+            "Check that the PDB has REMARK PDBinfo-LABEL lines defining CDR regions."
+        )
 
         # We must now invert these "designable" residue lists into "fixed" residue lists
         idxH = list(range(1, lenH + 1))

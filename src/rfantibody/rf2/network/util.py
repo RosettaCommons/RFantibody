@@ -1,11 +1,11 @@
-import torch
 import numpy as np
-
 import scipy.sparse
+import torch
 from scipy.spatial.transform import Rotation
 
 from rfantibody.rf2.network.chemical import *
 from rfantibody.rf2.network.scoring import *
+
 
 def random_rot_trans(xyz, random_noise=20.0):
     # xyz: (N, L, 27, 3)

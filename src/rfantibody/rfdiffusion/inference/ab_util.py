@@ -1,19 +1,12 @@
 import torch
-
-from rfantibody.rfdiffusion.kinematics import xyz_to_t2d
-
-import torch
-
 from icecream import ic
 
-from rfantibody.rfdiffusion.parsers import *
-from rfantibody.rfdiffusion.kinematics import xyz_to_t2d
 from rfantibody.rfdiffusion.chemical import INIT_CRDS
-from rfantibody.rfdiffusion.util import \
-    torsion_indices as TOR_INDICES, \
-    torsion_can_flip as TOR_CAN_FLIP, \
-    reference_angles as REF_ANGLES 
-
+from rfantibody.rfdiffusion.kinematics import xyz_to_t2d
+from rfantibody.rfdiffusion.parsers import *
+from rfantibody.rfdiffusion.util import reference_angles as REF_ANGLES
+from rfantibody.rfdiffusion.util import torsion_can_flip as TOR_CAN_FLIP
+from rfantibody.rfdiffusion.util import torsion_indices as TOR_INDICES
 
 ab_tasks = [
     'ab_diff',

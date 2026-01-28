@@ -2,12 +2,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
-
 from opt_einsum import contract as einsum
 
-from rfantibody.rfdiffusion.util_module import *
 from rfantibody.rfdiffusion.Attention_module import *
 from rfantibody.rfdiffusion.SE3_network import SE3TransformerWrapper
+from rfantibody.rfdiffusion.util_module import *
 
 # Components for three-track blocks
 # 1. MSA -> MSA update (biased attention. bias from pair & structure)

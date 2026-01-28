@@ -1,11 +1,12 @@
-import torch
-import numpy as np
-
-import scipy.sparse
 import itertools
+
+import numpy as np
+import scipy.sparse
+import torch
 
 from rfantibody.rfdiffusion.chemical import *
 from rfantibody.rfdiffusion.scoring import *
+
 
 class Dotdict(dict):
     """dot.notation access to dictionary attributes"""

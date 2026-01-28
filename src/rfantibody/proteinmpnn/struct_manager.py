@@ -1,9 +1,10 @@
+import glob
 import os
 import uuid
-import glob
 
-from rfantibody.util.quiver import Quiver
 from rfantibody.util.pose import Pose
+from rfantibody.util.quiver import Quiver
+
 
 class StructManager():
     '''
@@ -14,13 +15,16 @@ class StructManager():
     def __init__(self, args) -> None:
         self.args = args
 
-        self.pdb = False
-        if not args.pdbdir == '':
-            self.pdb = True
+        # Track input and output formats separately
+        self.input_pdb = False
+        self.input_quiver = False
+        self.output_pdb = False
+        self.output_quiver = False
 
+        # Setup input from PDB directory
+        if args.pdbdir != '':
+            self.input_pdb = True
             self.pdbdir = args.pdbdir
-            self.outpdbdir = args.outpdbdir
-
             self.struct_iterator = glob.glob(os.path.join(args.pdbdir, '*.pdb'))
 
             # Parse the runlist and determine which structures to process
@@ -34,31 +38,62 @@ class StructManager():
 
                     print(f'After filtering by runlist, {len(self.struct_iterator)} structures remain')
 
-        self.quiver = False
-        if not args.quiver == '':
-            self.quiver = True
-
+        # Setup input from quiver file
+        if args.quiver != '':
+            self.input_quiver = True
             self.inquiver = Quiver(args.quiver, mode='r')
-            self.outquiver = Quiver(args.outquiver, mode='w')
-
             self.struct_iterator = self.inquiver.get_tags()
 
-        assert self.pdb ^ self.quiver, 'Either pdb or quiver must be set to True'
+        # Setup output - quiver takes precedence over pdb
+        if args.outquiver != '':
+            self.output_quiver = True
+            self.outquiver = Quiver(args.outquiver, mode='w')
+        else:
+            self.output_pdb = True
+            self.outpdbdir = args.outpdbdir
 
-        # Setup checkpointing
-        self.chkfn = args.checkpoint_name
+        assert self.input_pdb ^ self.input_quiver, 'Exactly one input source (pdbdir or quiver) must be specified'
+
+        # Setup checkpointing - determine finished structures based on output type
         self.finished_structs = set()
 
-        if os.path.isfile(self.chkfn):
-            with open(self.chkfn, 'r') as f:
-                for line in f:
-                    self.finished_structs.add(line.strip())
+        if self.output_quiver:
+            # When using quiver output, check existing tags in the output quiver
+            # Output tags follow pattern: {input_tag}_dldesign_{idx}
+            # So we extract the base input tag from existing output tags
+            self.chkfn = None  # No checkpoint file needed for quiver output
+            existing_tags = self.outquiver.get_tags()
+            for tag in existing_tags:
+                # Extract input tag from output tag (remove _dldesign_N suffix)
+                if '_dldesign_' in tag:
+                    input_tag = tag.rsplit('_dldesign_', 1)[0]
+                    self.finished_structs.add(input_tag)
+        else:
+            # For PDB output, use checkpoint file next to the output directory
+            if args.checkpoint_name != 'check.point':
+                # User specified a custom checkpoint name, use it as-is
+                self.chkfn = args.checkpoint_name
+            else:
+                # Default: put checkpoint file next to output directory
+                self.chkfn = os.path.join(self.outpdbdir, 'check.point')
+                # Ensure output directory exists for checkpoint file
+                if not os.path.exists(self.outpdbdir):
+                    os.makedirs(self.outpdbdir)
+
+            if os.path.isfile(self.chkfn):
+                with open(self.chkfn, 'r') as f:
+                    for line in f:
+                        self.finished_structs.add(line.strip())
 
     def record_checkpoint(self, tag: str) -> None:
         '''
         Record the fact that this tag has been processed.
-        Write this tag to the list of finished structs
+        Write this tag to the list of finished structs.
+        For quiver output, this is a no-op since the quiver file itself tracks what's been written.
         '''
+        if self.chkfn is None:
+            # Using quiver output - no checkpoint file needed
+            return
         with open(self.chkfn, 'a') as f:
             f.write(f'{tag}\n')
 
@@ -82,9 +117,9 @@ class StructManager():
         tag: str,
     ) -> None:
         '''
-        Dump this pose to either a pdb file, or quiver file depending on the input arguments
+        Dump this pose to either a pdb file, or quiver file depending on the output arguments
         '''
-        if self.pdb:
+        if self.output_pdb:
             # If the outpdbdir does not exist, create it
             # If there are parents in the path that do not exist, create them as well
             if not os.path.exists(self.outpdbdir):
@@ -92,23 +127,21 @@ class StructManager():
 
             pdbfile = os.path.join(self.outpdbdir, tag + '.pdb')
             pose.dump_pdb(pdbfile)
-        
-        if self.quiver:
+
+        if self.output_quiver:
             pdblines = pose.to_pdblines()
             self.outquiver.add_pdb(pdblines, tag)
 
     def load_pose(self, tag: str) -> Pose:
         '''
-        Load a pose from either a silent file, pdb file, or quiver file depending on the input arguments
+        Load a pose from either a pdb file or quiver file depending on the input arguments
         '''
 
-        if not self.pdb and not self.silent and not self.quiver:
-            raise Exception('Neither pdb nor silent nor quiver is set to True. Cannot load pose')
-
-        if self.pdb:
+        if self.input_pdb:
             pose = Pose.from_pdb(tag)
-        
-        if self.quiver:
-            pose = Pose.from_pdblines(self.inquiver.get_pdb(tag))
+        elif self.input_quiver:
+            pose = Pose.from_pdblines(self.inquiver.get_pdblines(tag))
+        else:
+            raise Exception('Neither input_pdb nor input_quiver is set to True. Cannot load pose')
 
         return pose

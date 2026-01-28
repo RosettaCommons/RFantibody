@@ -1,14 +1,16 @@
 from __future__ import annotations
-import os
-import glob
-import functools
 
-import torch
+import functools
+import glob
+import os
+
 import numpy as np
+import torch
 
 import rfantibody.rf2.network.util as RF2_util
-from rfantibody.rf2.network.chemical import aa2long, num2aa, INIT_CRDS
+from rfantibody.rf2.network.chemical import INIT_CRDS, aa2long, num2aa
 from rfantibody.util.quiver import Quiver
+
 
 def get_pdblines(pose: "Pose", Bfacts=None) -> list:
     """
@@ -81,12 +83,16 @@ def mask_hotspots(pose: "Pose", show_proportion: float) -> torch.Tensor[bool]:
         return hotspots
 
     true_indices = np.where(hotspots)[0]
-    indices_to_convert = np.random.choice(
-        true_indices,
-        size=random_round(show_proportion * len(true_indices)),
-        replace=False,
-    )
-    hotspots[indices_to_convert] = False
+    # Calculate how many to HIDE (inverse of show_proportion)
+    hide_proportion = 1 - show_proportion
+    num_to_hide = min(random_round(hide_proportion * len(true_indices)), len(true_indices))
+    if num_to_hide > 0:
+        indices_to_convert = np.random.choice(
+            true_indices,
+            size=num_to_hide,
+            replace=False,
+        )
+        hotspots[indices_to_convert] = False
     return hotspots
 
 def get_init_xyz(xyz_t, mask_t, random_noise=5.0):
@@ -177,7 +183,7 @@ def get_done_list(conf: HydraConfig) -> list:
         strip=lambda x: os.path.splitext(os.path.basename(x))[0]
         return [strip(i)[:-5] for i in glob.glob(f'{conf.output.pdb_dir}/*_best.pdb')]
     elif conf.output.quiver is not None:
-        qv=Quiver(f'{conf.output.quiver}.qv', mode='r')
+        qv=Quiver(f'{conf.output.quiver}', mode='r')
         return qv.tags
     else:
         raise ValueError('Must specify output.pdb_dir or output.quiver')

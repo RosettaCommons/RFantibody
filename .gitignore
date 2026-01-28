@@ -1,3 +1,5 @@
+.*
+!.gitignore
 build
 rfantibody.egg-info
 __pycache__
@@ -6,3 +8,11 @@ include/dgl/*.whl
 T_50_omega_1000_min_sigma_0_02_min_b_1_5_max_b_2_5_schedule_linear.pkl
 cached_schedules
 example_outputs
+example_outputs_*
+check.point
+outputs
+test_report.txt
+dgl-2.4.0+cu118-cp310-cp310-manylinux1_x86_64.*
+*_report.txt
+dist
+*.sif

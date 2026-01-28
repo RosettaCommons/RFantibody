@@ -1,6 +1,5 @@
-import torch
-
 import numpy as np
+import torch
 
 from rfantibody.rfdiffusion.chemical import INIT_CRDS
 

@@ -1,13 +1,13 @@
-import string
-import re
 import gzip
+import re
+import string
 
-import torch
 import numpy as np
+import torch
 
-from rfantibody.rf2.network.ffindex import *
-from rfantibody.rf2.network.chemical import INIT_CRDS
 from rfantibody.rf2.network import util
+from rfantibody.rf2.network.chemical import INIT_CRDS
+from rfantibody.rf2.network.ffindex import *
 
 to1letter = {
     "ALA":'A', "ARG":'R', "ASN":'N', "ASP":'D', "CYS":'C',

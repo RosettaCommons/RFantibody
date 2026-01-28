@@ -1,13 +1,14 @@
-import torch
-
-import numpy as np
 import copy
 
-from rfantibody.proteinmpnn.model.protein_mpnn_utils import \
-  ProteinMPNN, \
-  tied_featurize, \
-  _scores, \
-  _S_to_seq
+import numpy as np
+import torch
+
+from rfantibody.proteinmpnn.model.protein_mpnn_utils import (
+    ProteinMPNN,
+    _S_to_seq,
+    _scores,
+    tied_featurize,
+)
 
 #################################
 # Function Definitions
@@ -29,7 +30,9 @@ aa_1_N = {a:n for n,a in enumerate(alpha_1)}
 aa_3_N = {a:n for n,a in enumerate(alpha_3)}
 aa_N_1 = {n:a for n,a in enumerate(alpha_1)}
 aa_1_3 = {a:b for a,b in zip(alpha_1,alpha_3)}
+aa_1_3['X'] = 'UNK'  # Add X -> UNK mapping for --allow-x mode
 aa_3_1 = {b:a for a,b in zip(alpha_1,alpha_3)}
+aa_3_1['UNK'] = 'X'  # Add UNK -> X reverse mapping
 
 def AA_to_N(x):
   # ["ARND"] -> [[0,1,2,3]]
@@ -226,12 +229,15 @@ def init_seq_optimize_model(device, hidden_dim, num_layers, backbone_noise, num_
    return model
 
 #def set_default_args( seq_per_target, omit_AAs=['X'], decoding_order='forward' ):
-def set_default_args( seq_per_target, omit_AAs=['X'] ):
+def set_default_args( seq_per_target, omit_AAs=['X'], allow_x=False ):
 
     #global DECODING_ORDER
     #DECODING_ORDER = decoding_order
 
-    if not 'X' in omit_AAs: omit_AAs.append('X') # We don't want any unknown residue assignments
+    # By default, X is always omitted to prevent unknown residue assignments.
+    # The allow_x flag bypasses this for testing/debugging purposes.
+    if not allow_x and 'X' not in omit_AAs:
+        omit_AAs.append('X')
 
     retval = {}
     retval['BATCH_COPIES'] = min( 1, seq_per_target )

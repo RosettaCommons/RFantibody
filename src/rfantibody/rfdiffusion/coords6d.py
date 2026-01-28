@@ -2,6 +2,7 @@ import numpy as np
 import scipy
 import scipy.spatial
 
+
 # calculate dihedral angles defined by 4 sets of points
 def get_dihedrals(a, b, c, d):
 

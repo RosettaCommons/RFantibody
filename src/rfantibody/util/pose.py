@@ -1,11 +1,11 @@
-import numpy as np
-
 from dataclasses import dataclass
 from typing import List
 
-from rfantibody.rfdiffusion.chemical import num2aa, aa2num
+import numpy as np
+
+from rfantibody.rf2.modules.parsers import get_cdr_masks_from_remarks, parse_pdblines
+from rfantibody.rfdiffusion.chemical import aa2num, num2aa
 from rfantibody.util.io import ab_write_pdblines
-from rfantibody.rf2.modules.parsers import parse_pdblines, get_cdr_masks_from_remarks
 
 
 def range1(n):
@@ -72,7 +72,8 @@ class Pose():
         }
 
         for cdr, mask in cdr_masks.items():
-            cdr_dict[cdr] = np.where(mask)[0].tolist()
+            # Convert to 1-indexed as documented in cdr_dict
+            cdr_dict[cdr] = [i + 1 for i in np.where(mask)[0].tolist()]
 
         return cls(
             atoms=bb_xyz,
@@ -93,13 +94,13 @@ class Pose():
         # We will collect the consecutive chains in the pose
 
         # Find the indices where the value changes
-        change_indices = np.where(np.diff(self.chains) != 0)[0] + 1
+        change_indices = np.where(np.diff(self.chain) != 0)[0] + 1
 
         # Include the first element as it is always unique in this context
         unique_indices = np.insert(change_indices, 0, 0)
 
         # Get the consecutive unique chains
-        unique_chains = self.chains[unique_indices]
+        unique_chains = self.chain[unique_indices]
 
         # Check two things about these chains:
         # 1. The chains must be unique ie. there are no dis-contiguous chains

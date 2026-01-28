@@ -1,9 +1,10 @@
-import torch 
-import numpy as np 
-import random 
+import random
 
-from chemical import INIT_CRDS
-from icecream import ic 
+import numpy as np
+import torch
+from icecream import ic
+
+from rfantibody.rfdiffusion.chemical import INIT_CRDS
 
 
 def th_min_angle(start, end, radians=False):

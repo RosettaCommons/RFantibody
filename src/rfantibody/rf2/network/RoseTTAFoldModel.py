@@ -2,12 +2,18 @@ import torch
 import torch.nn as nn
 from torch import einsum
 
-from rfantibody.rf2.network.Embeddings import MSA_emb, Extra_emb, Templ_emb, Recycling
+from rfantibody.rf2.network.AuxiliaryPredictor import (
+    DistanceNetwork,
+    ExpResolvedNetwork,
+    LDDTNetwork,
+    MaskedTokenNetwork,
+    PAENetwork,
+    v2_BinderNetwork,
+)
+from rfantibody.rf2.network.Embeddings import Extra_emb, MSA_emb, Recycling, Templ_emb
 from rfantibody.rf2.network.Track_module import IterativeSimulator
-from rfantibody.rf2.network.AuxiliaryPredictor import \
-    DistanceNetwork, MaskedTokenNetwork, ExpResolvedNetwork, LDDTNetwork, PAENetwork, v2_BinderNetwork
-from rfantibody.rf2.network.util_module import rbf
 from rfantibody.rf2.network.util import INIT_CRDS
+from rfantibody.rf2.network.util_module import rbf
 
 #from pytorch_memlab import LineProfiler, profile
 

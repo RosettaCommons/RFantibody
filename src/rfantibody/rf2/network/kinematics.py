@@ -1,5 +1,5 @@
-import torch
 import numpy as np
+import torch
 
 from rfantibody.rf2.network.chemical import INIT_CRDS
 from rfantibody.rf2.network.util import get_Cb

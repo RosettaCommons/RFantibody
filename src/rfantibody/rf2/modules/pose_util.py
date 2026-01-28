@@ -1,15 +1,17 @@
 from __future__ import annotations
-import os
-from dataclasses import dataclass, field
-from collections import OrderedDict
+
 import glob
+import os
+from collections import OrderedDict
+from dataclasses import dataclass, field
 
 import torch
 import torch.nn.functional as F
 
-from rfantibody.rf2.modules import parsers
-from rfantibody.rf2.modules import util
+from rfantibody.rf2.modules import parsers, util
 from rfantibody.rf2.modules.util import Dotdict
+from rfantibody.util.quiver import Quiver
+
 
 @dataclass
 class Pose:
@@ -41,11 +43,11 @@ class Pose:
     
     @property
     def antibody_length(self) -> int:
-        return sum(self.antibody_mask)
-    
+        return int(self.antibody_mask.sum())
+
     @property
     def target_length(self) -> int:
-        return sum(self.target_mask)
+        return int(self.target_mask.sum())
     
     @property
     def n_atoms(self) -> int:
@@ -113,9 +115,16 @@ class Pose:
     @property
     def chains_present(self) -> list:
         """
-        Returns which chains are present in the Pose
+        Returns which chains are present in the Pose, ordered by their position in the sequence
         """
-        return [ch for ch, mask in self.chain_dict.items() if mask.sum() > 0]
+        # Find the first occurrence of each chain to determine order
+        chain_positions = {}
+        for ch, mask in self.chain_dict.items():
+            if mask.sum() > 0:
+                chain_positions[ch] = torch.where(mask)[0][0].item()
+
+        # Sort chains by their first position
+        return sorted(chain_positions.keys(), key=lambda ch: chain_positions[ch])
 
     @property
     def target_mask(self) -> torch.Tensor:
@@ -132,9 +141,14 @@ class Pose:
     @property
     def pdb_idx(self) -> list:
         """
-        Makes pdb idx from chain_dict and idx
+        Makes pdb idx from chain_dict and idx, preserving actual chain positions
         """
-        chains=['H'] * sum(self.chain_dict['H']) + ['L'] * sum(self.chain_dict['L']) + ['T'] * sum(self.chain_dict['T'])
+        # Create chains array in correct positional order
+        chains = [''] * self.length
+        for ch, mask in self.chain_dict.items():
+            indices = torch.where(mask)[0]
+            for i in indices:
+                chains[i] = ch
         return list(zip(chains, self.idx.tolist()))
     
     def pdblines(self, Bfacts=None) -> list:
@@ -148,10 +162,11 @@ class Pose:
         """
         Returns a mask for the same chain.
         Note both antibody chains go on same chain
+        Returns a boolean tensor for proper masking operations.
         """
-        same_chain = torch.zeros((self.length, self.length)).long()
-        same_chain[:self.target_length, :self.target_length] = 1
-        same_chain[self.target_length:, self.target_length:] = 1
+        same_chain = torch.zeros((self.length, self.length), dtype=torch.bool)
+        same_chain[:self.target_length, :self.target_length] = True
+        same_chain[self.target_length:, self.target_length:] = True
         return same_chain
 
 @dataclass
@@ -212,7 +227,7 @@ class CDR:
     
     @property
     def cdrs_present(self) -> list:
-        return [self.cdr_names[idx] for idx, i in enumerate(self.cdrs) if i.sum() > 0]
+        return [self.cdr_names()[idx] for idx, i in enumerate(self.cdrs) if i.sum() > 0]
 
     @property
     def total_cdr_length(self) -> int:
@@ -281,6 +296,32 @@ def masked_pose(pose: Pose, mask: torch.Tensor) -> Pose:
     chain_dict={ch: pose.chain_dict[ch][mask] for ch in ['H', 'L', 'T']}
     return Pose(**split_attrs, cdrs=cdrs, chain_dict=chain_dict)
 
+def reorder_pose_to_HLT(pose: Pose) -> Pose:
+    """
+    Reorders a pose from THL order (used internally by RF2) to HLT order (standard output format).
+    Returns a new Pose object with chains in H-L-T order.
+    """
+    # Find indices for each chain
+    H_indices = torch.where(pose.chain_dict['H'])[0].tolist()
+    L_indices = torch.where(pose.chain_dict['L'])[0].tolist()
+    T_indices = torch.where(pose.chain_dict['T'])[0].tolist()
+
+    # Create new ordering: H, L, T
+    new_order = H_indices + L_indices + T_indices
+    new_order_tensor = torch.tensor(new_order, dtype=torch.long)
+
+    # Reorder all tensor attributes
+    attributes = ['xyz', 'seq', 'atom_mask', 'hotspots', 'idx']
+    reordered_attrs = {attr: getattr(pose, attr)[new_order_tensor] for attr in attributes}
+
+    # Reorder CDR masks
+    cdrs = CDR(**{ch: getattr(pose.cdrs, ch)[new_order_tensor] for ch in pose.cdrs.cdr_names()})
+
+    # Reorder chain_dict masks
+    chain_dict = OrderedDict({ch: pose.chain_dict[ch][new_order_tensor] for ch in ['H', 'L', 'T']})
+
+    return Pose(**reordered_attrs, cdrs=cdrs, chain_dict=chain_dict)
+
 def pose_from_remarked(pdb_path: str) -> Pose:
     """
     Builds a pose object from a pdb file in HLT remarked format
@@ -302,7 +343,8 @@ def parsed_to_pose(pdbf: Dotdict) -> Pose:
     if not set([i[0] for i in pdbf.pdb_idx]).issubset(['H','L','T']):
         raise ValueError("There must only be H, L and T chains in the pdb file")
     chain_dict=masks_from_pdb_idx(pdbf.pdb_idx)
-    idx=torch.Tensor([int(i[1]) for i in pdbf.pdb_idx])
+    # Use the idx from pdbf directly (already created as int64 in parsers.py)
+    idx=pdbf.idx
     cdrs=CDR(**pdbf.cdr_masks)
     return Pose(xyz=pdbf.xyz, seq=pdbf.seq, atom_mask=pdbf.atom_mask, cdrs=cdrs, idx=idx, chain_dict=chain_dict)
 
@@ -364,7 +406,7 @@ def pose_generator(conf: HydraConfig) -> tuple[Pose, str]:
         raise ValueError("Must provide exactly one of quiver, remarked_pdb, or pdb_dir")
     
     if conf.input.quiver is not None:
-        quiver=Quiver(conf.quiver, mode='r')
+        quiver=Quiver(conf.input.quiver, mode='r')
         tags=quiver.get_tags()
 
         for tag in tags:

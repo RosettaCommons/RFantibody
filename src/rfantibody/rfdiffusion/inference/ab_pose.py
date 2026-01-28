@@ -1,14 +1,16 @@
-import numpy as np
 import os
+import random
 import sys
+
+import numpy as np
 import torch
 from icecream import ic
-from parsers import chothia_pdb_parser, HLT_pdb_parser
 
-from chemical import INIT_CRDS
-import random
-from util import Dotdict
-from inference.utils import parse_pdb
+from rfantibody.rfdiffusion.chemical import INIT_CRDS
+from rfantibody.rfdiffusion.inference.utils import parse_pdb
+from rfantibody.rfdiffusion.parsers import HLT_pdb_parser, chothia_pdb_parser
+from rfantibody.rfdiffusion.util import Dotdict
+
 
 def idx2int(idx:str) -> int:
     '''

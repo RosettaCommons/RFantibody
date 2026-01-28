@@ -14,26 +14,25 @@ See https://hydra.cc/docs/advanced/hydra-command-line-flags/ for more options.
 
 """
 
-import os
-import time
-import pickle
-import re
-import random
 import glob
-
-import torch 
-import numpy as np
-
-from omegaconf import OmegaConf
-from hydra.core.hydra_config import HydraConfig
-import hydra
 import logging
+import os
+import pickle
+import random
+import re
+import time
 
-from rfantibody.rfdiffusion.util import writepdb_multi, writepdb, generate_Cbeta
-from rfantibody.util.io import ab_write_pdblines
+import hydra
+import numpy as np
+import torch
+from hydra.core.hydra_config import HydraConfig
+from omegaconf import OmegaConf
+
 from rfantibody.rfdiffusion.chemical import num2aa
-from rfantibody.util.quiver import Quiver
 from rfantibody.rfdiffusion.inference import model_runners
+from rfantibody.rfdiffusion.util import generate_Cbeta, writepdb, writepdb_multi
+from rfantibody.util.io import ab_write_pdblines
+from rfantibody.util.quiver import Quiver
 
 conversion = 'ARNDCQEGHILKMFPSTWYV-'
 

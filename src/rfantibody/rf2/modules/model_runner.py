@@ -1,15 +1,17 @@
 from __future__ import annotations
-from collections import OrderedDict
+
 import copy
+from collections import OrderedDict
 
 import torch
 import torch.nn as nn
-
 from omegaconf import OmegaConf
 
-import rfantibody.rf2.modules.rmsd as rmsd
-from rfantibody.rf2.network.predict import pae_unbin, Predictor
 import rfantibody.rf2.modules.pose_util as pu
+import rfantibody.rf2.modules.rmsd as rmsd
+from rfantibody.rf2.network.predict import Predictor, pae_unbin
+from rfantibody.util.quiver import Quiver
+
 
 class AbPredictor(Predictor):
     """
@@ -45,6 +47,7 @@ class AbPredictor(Predictor):
             ) = self.preprocess_fn(pose, device=self.device)
         
         network_input = self._add_batch_dim(network_input)
+
         outputs = [
             "msa_prev",
             "pair_prev",
@@ -52,7 +55,7 @@ class AbPredictor(Predictor):
             "xyz_prev",
             "alpha",
             "mask_recycle",
-        ]    
+        ]
         output_i = (None, None, None, xyz_prev[None], None, mask_recycle)
         output_i = {outputs[i]: val for i, val in enumerate(output_i)}
         msa_prev = pair_prev = None
@@ -64,12 +67,12 @@ class AbPredictor(Predictor):
             for i_cycle in range(self.conf.inference.num_recycles + 1):
                 output_i={i:val for i, val in output_i.items() if i in outputs}
                 input_i={**network_input, **output_i}
-                
-                # TODO clean this up
+
                 input_i.pop('alpha',None)
                 input_i['xyz_t'] = input_i['xyz_t'].clone()[...,1,:]
-                
+
                 output_i=self._output_dictionary(self.model(**input_i), input_i)
+
                 output_pose_i = pu.pose_from_RF_output(output_i, pose)
                 metrics_i=self._process_output(output_i, output_pose_i, pose)
                 
@@ -163,25 +166,35 @@ def get_rmsds(pose1: Pose, pose2: Pose, metrics: dict) -> None:
         Ca rmsd of antibody monomer (aligned on framework)
         Ca rmsd of CDRs (aligned on framework)
         Ca rmsd of each CDR (aligned on framework)
+
+    If target or framework lengths don't match between poses, RMSD calculations are skipped.
     """
+    # Copy poses to avoid modifying them in-place
+    pose1 = copy.deepcopy(pose1)
+    pose2 = copy.deepcopy(pose2)
+
     # target-aligned rmsds
-    rmsd.tmalign_to_subset(pose1, pose2, subset='target')
-    metrics['target_aligned_antibody_rmsd'] = rmsd.calc_prealigned_rmsd(pose1, pose2, pose1.antibody_mask)
-    metrics['target_aligned_cdr_rmsd'] = rmsd.calc_prealigned_rmsd(pose1, pose2, pose1.cdrs.mask_1d)
+    target_aligned = rmsd.align_to_subset(pose1, pose2, subset='target')
+    if target_aligned:
+        metrics['target_aligned_antibody_rmsd'] = rmsd.calc_prealigned_rmsd(pose1, pose2, pose1.antibody_mask)
+        metrics['target_aligned_cdr_rmsd'] = rmsd.calc_prealigned_rmsd(pose1, pose2, pose1.cdrs.mask_1d)
 
     # framework-aligned monomer rmsds
-    rmsd.tmalign_to_subset(pose1, pose2, subset='framework')
-    metrics['framework_aligned_antibody_rmsd'] = rmsd.calc_prealigned_rmsd(pose1, pose2, pose1.antibody_mask)
-    metrics['framework_aligned_cdr_rmsd'] = rmsd.calc_prealigned_rmsd(pose1, pose2, pose1.cdrs.mask_1d)
+    framework_aligned = rmsd.align_to_subset(pose1, pose2, subset='framework')
+    if framework_aligned:
+        metrics['framework_aligned_antibody_rmsd'] = rmsd.calc_prealigned_rmsd(pose1, pose2, pose1.antibody_mask)
+        metrics['framework_aligned_cdr_rmsd'] = rmsd.calc_prealigned_rmsd(pose1, pose2, pose1.cdrs.mask_1d)
 
-    # individual loop rmsds
-    # pose1 is already framework-aligned
-    for loop in pose1.cdrs.cdr_names():
-        metrics[f'framework_aligned_{loop}_rmsd'] = rmsd.calc_prealigned_rmsd(pose1, pose2, getattr(pose1.cdrs, f'{loop}'))
+        # individual loop rmsds
+        # pose1 is already framework-aligned
+        for loop in pose1.cdrs.cdr_names():
+            metrics[f'framework_aligned_{loop}_rmsd'] = rmsd.calc_prealigned_rmsd(pose1, pose2, getattr(pose1.cdrs, f'{loop}'))
     
 def write_output(to_write: OrderedDict, tag: str, conf: HydraConfig) -> None:
     """
-    Writes output to file. Either pdb or quiver file
+    Writes output to file. Either pdb or quiver file.
+    Outputs are written in HLT format (Heavy, Light, Target) for consistency
+    with standard antibody conventions.
     """
     if sum([var is not None for var in [conf.output.pdb_dir, conf.output.quiver]]) != 1:
         raise ValueError('Exactly one of output.pdb_dir or output.quiver must be specified')
@@ -193,10 +206,20 @@ def write_output(to_write: OrderedDict, tag: str, conf: HydraConfig) -> None:
             suffix = f'cycle_{key}'
         pose = val['pose']
         metrics = val['metrics']
+        # Reorder from internal THL order to output HLT order
+        pose = pu.reorder_pose_to_HLT(pose)
         pdblines=pu.pose_to_remarked_pdblines(pose, metrics=metrics)
         if qv:
-            output_qv=Quiver(f'{conf.output.quiver}.qv', mode='w')
-            pdblines=[f'QV_{line}' if line.startswith('SCORE') else line for line in pdblines]
-            output_quiver.add_pdb(pdblines, tag=f'{tag}_{suffix}')
+            output_quiver=Quiver(f'{conf.output.quiver}', mode='w')
+            # Filter out SCORE lines from pdblines - we'll add them via score_str
+            pdblines_no_scores = [line for line in pdblines if not line.startswith('SCORE')]
+            # Build score string in quiver format: key1=val1|key2=val2|...
+            score_parts = []
+            for k, v in metrics.items():
+                if torch.is_tensor(v):
+                    v = v.mean().item()
+                score_parts.append(f'{k}={v:.2f}')
+            score_str = '|'.join(score_parts) if score_parts else None
+            output_quiver.add_pdb(pdblines_no_scores, tag=f'{tag}_{suffix}', score_str=score_str)
         else:
             pu.pdblines_to_pdb(pdblines, f'{conf.output.pdb_dir}/{tag}_{suffix}.pdb')

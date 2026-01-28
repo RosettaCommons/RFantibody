@@ -1,6 +1,6 @@
 """SO(3) diffusion methods."""
-import torch
 import numpy as np
+import torch
 
 L_default = 2000
 

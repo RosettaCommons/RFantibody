@@ -1,30 +1,30 @@
 # script for diffusion protocols 
-import torch 
-import pickle
-import numpy as np
-import os
 import logging
+import os
+import pickle
+import time
 from typing import List
 
+import numpy as np
+import torch
+from icecream import ic
 from scipy.spatial.transform import Rotation as scipy_R
-from scipy.spatial.transform import Slerp 
-import rotation_conversions
+from scipy.spatial.transform import Slerp
 
-from util import rigid_from_3_points, get_torsions
-
-from util import torsion_indices as TOR_INDICES 
-from util import torsion_can_flip as TOR_CAN_FLIP
-from util import reference_angles as REF_ANGLES
-
-from util_module import ComputeAllAtomCoords
-
-from diff_util import th_min_angle, th_interpolate_angles, get_aa_schedule 
-
-from chemical import INIT_CRDS 
-import igso3
-import time 
-
-from icecream import ic  
+import rfantibody.rfdiffusion.igso3 as igso3
+import rfantibody.rfdiffusion.rotation_conversions as rotation_conversions
+from rfantibody.rfdiffusion.chemical import INIT_CRDS
+from rfantibody.rfdiffusion.diff_util import (
+    get_aa_schedule,
+    th_interpolate_angles,
+    th_min_angle,
+)
+from rfantibody.rfdiffusion.util import get_torsions
+from rfantibody.rfdiffusion.util import reference_angles as REF_ANGLES
+from rfantibody.rfdiffusion.util import rigid_from_3_points
+from rfantibody.rfdiffusion.util import torsion_can_flip as TOR_CAN_FLIP
+from rfantibody.rfdiffusion.util import torsion_indices as TOR_INDICES
+from rfantibody.rfdiffusion.util_module import ComputeAllAtomCoords
 
 torch.set_printoptions(sci_mode=False)
 

@@ -1,25 +1,44 @@
 import argparse
 import os.path
 
+
 def main(args):
 
-    import json, time, os, sys, glob
+    import copy
+    import glob
+    import json
+    import os
+    import os.path
+    import random
     import shutil
+    import subprocess
+    import sys
+    import time
     import warnings
+
     import numpy as np
     import torch
-    from torch import optim
-    from torch.utils.data import DataLoader
-    from torch.utils.data.dataset import random_split, Subset
-    import copy
     import torch.nn as nn
     import torch.nn.functional as F
-    import random
-    import os.path
-    import subprocess
-    
-    from protein_mpnn_utils import loss_nll, loss_smoothed, gather_edges, gather_nodes, gather_nodes_t, cat_neighbors_nodes, _scores, _S_to_seq, tied_featurize, parse_PDB, parse_fasta
-    from protein_mpnn_utils import StructureDataset, StructureDatasetPDB, ProteinMPNN
+    from protein_mpnn_utils import (
+        ProteinMPNN,
+        StructureDataset,
+        StructureDatasetPDB,
+        _S_to_seq,
+        _scores,
+        cat_neighbors_nodes,
+        gather_edges,
+        gather_nodes,
+        gather_nodes_t,
+        loss_nll,
+        loss_smoothed,
+        parse_fasta,
+        parse_PDB,
+        tied_featurize,
+    )
+    from torch import optim
+    from torch.utils.data import DataLoader
+    from torch.utils.data.dataset import Subset, random_split
 
     if args.seed:
         seed=args.seed
