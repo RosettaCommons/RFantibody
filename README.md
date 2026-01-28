@@ -227,33 +227,34 @@ apptainer exec --nv --writable-tmpfs \
 ### Full Pipeline Example (Apptainer)
 
 ```bash
-# Set up bind mount (adjust path as needed)
-DATA_DIR=/path/to/your/data
+# Set up bind mount
+DATA_DIR=scripts/examples
 APPTAINER_OPTS="--nv --writable-tmpfs -B $DATA_DIR:/data"
 
 # 1. Design backbones with RFdiffusion
 apptainer exec $APPTAINER_OPTS rfantibody.sif rfdiffusion \
-    -t /data/target.pdb \
-    -f /data/framework.pdb \
-    -q /data/backbones.qv \
-    -n 100 \
-    -l "H1:7,H2:6,H3:5-13,L1:8-13,L2:7,L3:9-11" \
-    -h "T305,T456"
+    -t /data/example_inputs/flu_HA.pdb \
+    -f /data/example_inputs/h-NbBCII10.pdb \
+    -q /data/example_outputs/1_app_rfdiffusion.qv \
+    -n 2 \
+    -l "H1:7,H2:6,H3:5-13" \
+    -h "B146,B170,B177"
 
 # 2. Design sequences with ProteinMPNN
 apptainer exec $APPTAINER_OPTS rfantibody.sif proteinmpnn \
-    -q /data/backbones.qv \
-    --output-quiver /data/sequences.qv \
-    -n 5
+    -q /data/example_outputs/1_app_rfdiffusion.qv \
+    --output-quiver /data/example_outputs/2_app_proteinmpnn.qv \
+    -n 4 \
+    -t 0.2
 
 # 3. Predict structures with RF2
 apptainer exec $APPTAINER_OPTS rfantibody.sif rf2 \
-    -q /data/sequences.qv \
-    --output-quiver /data/predictions.qv \
+    -q /data/example_outputs/2_app_proteinmpnn.qv \
+    --output-quiver /data/example_outputs/3_app_rf2.qv \
     -r 10
 
-# 4. Extract scores
-apptainer exec $APPTAINER_OPTS rfantibody.sif qvscorefile /data/predictions.qv > scores.tsv
+# 4. Extract scores to scripts/examples/example_outputs/3_app_rf2.sc
+apptainer exec $APPTAINER_OPTS rfantibody.sif qvscorefile /data/example_outputs/3_app_rf2.qv
 ```
 
 ### Interactive Shell
