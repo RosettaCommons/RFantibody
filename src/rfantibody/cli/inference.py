@@ -78,11 +78,11 @@ def rfdiffusion(
         # Basic antibody design
         rfdiffusion -t antigen.pdb -f framework.pdb -o my_designs/ab
 
+    \b
         # Design with specific loop lengths and hotspots
-        rfdiffusion -t antigen.pdb -f framework.pdb \\
-            -l "H1:7,H2:6,H3:5-13,L1:8-13,L2:7,L3:9-11" \\
-            -h "A305,A456" -n 5
+        rfdiffusion -t antigen.pdb -f framework.pdb -l "H1:7,H3:5-13" -h "A305" -n 5
 
+    \b
         # Output to Quiver file
         rfdiffusion -t antigen.pdb -f framework.pdb -q designs.qv -n 100
     """
@@ -216,9 +216,11 @@ def proteinmpnn(
         # Design sequences for PDBs in a directory
         proteinmpnn -i structures/ -o designed/ -n 5
 
+    \b
         # Design from Quiver file
         proteinmpnn -q designs.qv --output-quiver designed.qv
 
+    \b
         # Design only specific loops with higher temperature
         proteinmpnn -i structures/ -l "H3,L3" -t 0.2
     """
@@ -343,12 +345,15 @@ def rf2(
         # Predict from single PDB
         rf2 -p antibody.pdb -o predictions/
 
+    \b
         # Predict from directory
         rf2 -i structures/ -o predictions/ -r 5
 
+    \b
         # Predict from Quiver to Quiver
         rf2 -q designs.qv --output-quiver predictions.qv
 
+    \b
         # Predict with higher hotspot visibility
         rf2 -p antibody.pdb -o predictions/ --hotspot-show-prop 0.5
     """
