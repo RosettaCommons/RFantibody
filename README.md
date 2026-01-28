@@ -82,7 +82,7 @@ source ~/.bashrc  # or ~/.zshrc if using zsh
 ### 2. Clone the Repository
 
 ```bash
-git clone https://github.com/RosettaCommons/RFantibody
+git clone https://github.com/RosettaCommons/RFantibody.git
 cd RFantibody
 ```
 
