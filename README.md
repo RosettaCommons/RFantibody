@@ -221,33 +221,34 @@ apptainer exec --nv --writable-tmpfs \
 ### Full Pipeline Example (Apptainer)
 
 ```bash
-# Set up bind mount (adjust path as needed)
-DATA_DIR=/path/to/your/data
+# Set up bind mount
+DATA_DIR=scripts/examples
 APPTAINER_OPTS="--nv --writable-tmpfs -B $DATA_DIR:/data"
 
 # 1. Design backbones with RFdiffusion
 apptainer exec $APPTAINER_OPTS rfantibody.sif rfdiffusion \
-    -t /data/target.pdb \
-    -f /data/framework.pdb \
-    -q /data/backbones.qv \
-    -n 100 \
-    -l "H1:7,H2:6,H3:5-13,L1:8-13,L2:7,L3:9-11" \
-    -h "T305,T456"
+    -t /data/example_inputs/flu_HA.pdb \
+    -f /data/example_inputs/h-NbBCII10.pdb \
+    -q /data/example_outputs/1_app_rfdiffusion.qv \
+    -n 2 \
+    -l "H1:7,H2:6,H3:5-13" \
+    -h "B146,B170,B177"
 
 # 2. Design sequences with ProteinMPNN
 apptainer exec $APPTAINER_OPTS rfantibody.sif proteinmpnn \
-    -q /data/backbones.qv \
-    --output-quiver /data/sequences.qv \
-    -n 5
+    -q /data/example_outputs/1_app_rfdiffusion.qv \
+    --output-quiver /data/example_outputs/2_app_proteinmpnn.qv \
+    -n 4 \
+    -t 0.2
 
 # 3. Predict structures with RF2
 apptainer exec $APPTAINER_OPTS rfantibody.sif rf2 \
-    -q /data/sequences.qv \
-    --output-quiver /data/predictions.qv \
+    -q /data/example_outputs/2_app_proteinmpnn.qv \
+    --output-quiver /data/example_outputs/3_app_rf2.qv \
     -r 10
 
-# 4. Extract scores
-apptainer exec $APPTAINER_OPTS rfantibody.sif qvscorefile /data/predictions.qv > scores.tsv
+# 4. Extract scores to scripts/examples/example_outputs/3_app_rf2.sc
+apptainer exec $APPTAINER_OPTS rfantibody.sif qvscorefile /data/example_outputs/3_app_rf2.qv
 ```
 
 ### Interactive Shell
@@ -373,26 +374,95 @@ All commands support `--help` for detailed usage information.
 
 ## Full Pipeline Example
 
+We provide a complete pipeline script at `scripts/examples/nanobody_full_pipeline.sh` that runs all three steps of the RFantibody workflow. Here's a walkthrough:
+
+### Configuration
+
+The script defines editable parameters at the top:
+
 ```bash
-# 1. Design backbones with RFdiffusion
-rfdiffusion \
-    -t antigen.pdb \
-    -f framework.pdb \
-    -q backbones.qv \
-    -n 100 \
-    -l "H1:7,H2:6,H3:5-13,L1:8-13,L2:7,L3:9-11" \
-    -h "T305,T456"
+# Input files
+TARGET_PDB="scripts/examples/example_inputs/flu_HA.pdb"       # Target antigen
+FRAMEWORK_PDB="scripts/examples/example_inputs/h-NbBCII10.pdb" # Nanobody framework
 
-# 2. Design sequences with ProteinMPNN
-proteinmpnn -q backbones.qv --output-quiver sequences.qv -n 5
+# Output directory
+OUTPUT_DIR="scripts/examples/example_outputs/nb_ha_pipeline"
 
-# 3. Predict structures with RF2
-rf2 -q sequences.qv --output-quiver predictions.qv -r 10
+# RFdiffusion parameters
+NUM_DESIGNS=1000                        # Number of backbone designs
+DESIGN_LOOPS="H1:7,H2:6,H3:5-13"        # CDR loop lengths
+HOTSPOTS="B146,B170,B177"               # Target residues to focus binding
 
-# 4. Extract scores and top designs
-qvscorefile predictions.qv > scores.tsv
-qvextract predictions.qv -o final_designs/
+# ProteinMPNN parameters
+NUM_SEQS=4                              # Sequences per backbone
+SAMPLING_TEMP=0.2                       # Sampling temperature
+
+# RF2 parameters
+NUM_RECYCLES=10                         # Recycling iterations
 ```
+
+### Step 1: RFdiffusion (Backbone Design)
+
+```bash
+uv run rfdiffusion \
+    --target "$TARGET_PDB" \
+    --framework "$FRAMEWORK_PDB" \
+    --output-quiver "$OUTPUT_DIR/1_rfdiffusion.qv" \
+    --num-designs "$NUM_DESIGNS" \
+    --design-loops "$DESIGN_LOOPS" \
+    --hotspots "$HOTSPOTS"
+```
+
+This generates nanobody backbone structures docked to the target, with CDR loops designed to contact the specified hotspot residues.
+
+### Step 2: ProteinMPNN (Sequence Design)
+
+```bash
+uv run proteinmpnn \
+    --input-quiver "$OUTPUT_DIR/1_rfdiffusion.qv" \
+    --output-quiver "$OUTPUT_DIR/2_proteinmpnn.qv" \
+    --seqs-per-struct "$NUM_SEQS" \
+    --temperature "$SAMPLING_TEMP"
+```
+
+Takes the backbone designs and generates amino acid sequences for the CDR loops. Multiple sequences per backbone increases diversity.
+
+### Step 3: RF2 (Structure Prediction)
+
+```bash
+uv run rf2 \
+    --input-quiver "$OUTPUT_DIR/2_proteinmpnn.qv" \
+    --output-quiver "$OUTPUT_DIR/3_rf2.qv" \
+    --num-recycles "$NUM_RECYCLES"
+```
+
+Predicts the final structures and provides confidence scores (pLDDT, PAE) for filtering.
+
+### Working with Results
+
+After the pipeline completes, use Quiver utilities to analyze results:
+
+```bash
+# List all designs
+qvls $OUTPUT_DIR/3_rf2.qv
+
+# Extract information on how well RFdiffusion targeted the hotspots for each design
+qvscorefile $OUTPUT_DIR/1_rfdiffusion.qv
+
+# Extract RF2 scores to a tab-separated scorefile (3_rf2.sc)
+qvscorefile $OUTPUT_DIR/3_rf2.qv
+
+# Extract all PDBs for visual inspection
+qvextract $OUTPUT_DIR/3_rf2.qv -o final_designs/
+```
+
+### Running the Pipeline
+
+```bash
+bash scripts/examples/nanobody_full_pipeline.sh
+```
+
+The script outputs three Quiver files representing each stage, allowing you to inspect intermediate results or restart from any step.
 
 # Usage
 

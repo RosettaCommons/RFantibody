@@ -63,6 +63,7 @@ class AbPredictor(Predictor):
         best_lddt = torch.tensor([-1.0], device=self.device)
 
         to_write=OrderedDict()
+        print(f"[RF2] Processing: {tag}")
         with torch.no_grad():
             for i_cycle in range(self.conf.inference.num_recycles + 1):
                 output_i={i:val for i, val in output_i.items() if i in outputs}
@@ -75,7 +76,9 @@ class AbPredictor(Predictor):
 
                 output_pose_i = pu.pose_from_RF_output(output_i, pose)
                 metrics_i=self._process_output(output_i, output_pose_i, pose)
-                
+
+                print(f"[RF2]   Cycle {i_cycle + 1}/{self.conf.inference.num_recycles + 1} - pLDDT: {metrics_i['pred_lddt'].mean():.3f}")
+
                 if metrics_i['pred_lddt'].mean() > best_lddt.mean():
                     best_lddt = metrics_i['pred_lddt']
                     best_pose = copy.deepcopy(output_pose_i)
@@ -84,6 +87,7 @@ class AbPredictor(Predictor):
                 if self.conf.output.output_intermediates:
                     to_write[i_cycle] = {'pose': output_pose_i, 'metrics': metrics_i}
                 torch.cuda.empty_cache()
+        print(f"[RF2] Completed: {tag} - Best pLDDT: {best_lddt.mean():.3f}")
         write_output(to_write, tag, self.conf)
 
     def _update_params_from_checkpoint(self) -> None:

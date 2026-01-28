@@ -49,6 +49,8 @@ def _resolve_path(path: Optional[Path]) -> Optional[Path]:
               help='Final diffusion step (default: 1)')
 @click.option('--deterministic', is_flag=True,
               help='Enable deterministic mode for reproducibility')
+@click.option('--no-trajectory', is_flag=True,
+              help='Disable trajectory output files')
 @click.option('--extra', '-e', type=str, multiple=True,
               help='Extra Hydra overrides (can be specified multiple times)')
 def rfdiffusion(
@@ -63,6 +65,7 @@ def rfdiffusion(
     diffuser_t: int,
     final_step: int,
     deterministic: bool,
+    no_trajectory: bool,
     extra: tuple
 ):
     """Run RFdiffusion antibody design.
@@ -75,11 +78,11 @@ def rfdiffusion(
         # Basic antibody design
         rfdiffusion -t antigen.pdb -f framework.pdb -o my_designs/ab
 
+    \b
         # Design with specific loop lengths and hotspots
-        rfdiffusion -t antigen.pdb -f framework.pdb \\
-            -l "H1:7,H2:6,H3:5-13,L1:8-13,L2:7,L3:9-11" \\
-            -h "A305,A456" -n 5
+        rfdiffusion -t antigen.pdb -f framework.pdb -l "H1:7,H3:5-13" -h "A305" -n 5
 
+    \b
         # Output to Quiver file
         rfdiffusion -t antigen.pdb -f framework.pdb -q designs.qv -n 100
     """
@@ -139,6 +142,10 @@ def rfdiffusion(
     # Deterministic mode
     if deterministic:
         cmd.append('inference.deterministic=True')
+
+    # Disable trajectory output
+    if no_trajectory:
+        cmd.append('inference.write_trajectory=False')
 
     # Extra overrides
     for override in extra:
@@ -209,9 +216,11 @@ def proteinmpnn(
         # Design sequences for PDBs in a directory
         proteinmpnn -i structures/ -o designed/ -n 5
 
+    \b
         # Design from Quiver file
         proteinmpnn -q designs.qv --output-quiver designed.qv
 
+    \b
         # Design only specific loops with higher temperature
         proteinmpnn -i structures/ -l "H3,L3" -t 0.2
     """
@@ -336,12 +345,15 @@ def rf2(
         # Predict from single PDB
         rf2 -p antibody.pdb -o predictions/
 
+    \b
         # Predict from directory
         rf2 -i structures/ -o predictions/ -r 5
 
+    \b
         # Predict from Quiver to Quiver
         rf2 -q designs.qv --output-quiver predictions.qv
 
+    \b
         # Predict with higher hotspot visibility
         rf2 -p antibody.pdb -o predictions/ --hotspot-show-prop 0.5
     """
