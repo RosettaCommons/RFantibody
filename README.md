@@ -5,7 +5,7 @@
 
 # Description
 RFantibody is a pipeline for the structure-based design of _de novo_ antibodies and nanobodies. RFantibody consists of three separate methods:
-- Protein backbone design with an antibody-fintuned version of [RFdiffusion](https://www.nature.com/articles/s41586-023-06415-8)
+- Protein backbone design with an antibody-finetuned version of [RFdiffusion](https://www.nature.com/articles/s41586-023-06415-8)
 - Protein sequence design with [ProteinMPNN](https://www.science.org/doi/10.1126/science.add2187)
 - _In silico_ filtering of designs using an antibody-finetuned version of [RoseTTAFold2](https://www.biorxiv.org/content/10.1101/2023.05.24.542179v1)
 
@@ -108,15 +108,15 @@ This uses uv to:
 
 After setup, you can either:
 
-**Option A**: Prefix commands with `uv run` (recommended):
-```bash
-uv run rfdiffusion --help
-```
-
-**Option B**: Activate the virtual environment directly:
+**Option A**: Activate the virtual environment (recommended):
 ```bash
 source .venv/bin/activate
 rfdiffusion --help
+```
+
+**Option B**: Prefix commands with `uv run`:
+```bash
+uv run rfdiffusion --help
 ```
 
 ### Verifying the Installation
@@ -353,6 +353,7 @@ Key options:
 - `--output-quiver`: Output Quiver file
 - `-r, --num-recycles`: Recycling iterations (default: 10)
 - `-s, --seed`: Random seed for reproducibility
+- `--hotspot-show-prop`: Proportion of hotspot residues to show to model (default: 0.1)
 
 Example with Quiver files:
 ```bash
