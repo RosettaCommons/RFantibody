@@ -55,12 +55,6 @@ If this command runs successfully then you have a compatible GPU and RFantibody 
 - **GPU**: NVIDIA GPU with CUDA 11.8+ support
 - **OS**: Linux (Ubuntu 22.04 recommended)
 
-# Downloading Weights
-
-Navigate to the directory where RFantibody is downloaded. Then run the following command to download the pipeline weights to the RFantibody/weights directory:
-```
-bash include/download_weights.sh
-```
 
 # Installation
 
