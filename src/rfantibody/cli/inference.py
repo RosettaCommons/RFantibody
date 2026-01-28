@@ -49,6 +49,8 @@ def _resolve_path(path: Optional[Path]) -> Optional[Path]:
               help='Final diffusion step (default: 1)')
 @click.option('--deterministic', is_flag=True,
               help='Enable deterministic mode for reproducibility')
+@click.option('--no-trajectory', is_flag=True,
+              help='Disable trajectory output files')
 @click.option('--extra', '-e', type=str, multiple=True,
               help='Extra Hydra overrides (can be specified multiple times)')
 def rfdiffusion(
@@ -63,6 +65,7 @@ def rfdiffusion(
     diffuser_t: int,
     final_step: int,
     deterministic: bool,
+    no_trajectory: bool,
     extra: tuple
 ):
     """Run RFdiffusion antibody design.
@@ -139,6 +142,10 @@ def rfdiffusion(
     # Deterministic mode
     if deterministic:
         cmd.append('inference.deterministic=True')
+
+    # Disable trajectory output
+    if no_trajectory:
+        cmd.append('inference.write_trajectory=False')
 
     # Extra overrides
     for override in extra:

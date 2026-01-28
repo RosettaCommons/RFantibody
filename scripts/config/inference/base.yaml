@@ -4,6 +4,7 @@ inference:
   input_pdb: null
   num_designs: 10
   design_startnum: 0
+  no_trajectory: False
   ckpt_override_path: null
   symmetry: null
   recenter: True

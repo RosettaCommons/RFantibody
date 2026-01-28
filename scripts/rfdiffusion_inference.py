@@ -46,7 +46,11 @@ def main(conf: HydraConfig) -> None:
     log = logging.getLogger(__name__)
     if conf.inference.deterministic:
         make_deterministic()
-    
+
+    # Handle --no-trajectory flag (convenience alias for write_trajectory=False)
+    if conf.inference.no_trajectory:
+        conf.inference.write_trajectory = False
+
     # Initialize sampler and target/contig.
     sampler = model_runners.AbSampler(conf)
     
