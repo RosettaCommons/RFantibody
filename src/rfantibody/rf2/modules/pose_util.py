@@ -346,13 +346,14 @@ def parsed_to_pose(pdbf: Dotdict) -> Pose:
     # Use the idx from pdbf directly (already created as int64 in parsers.py)
     idx=pdbf.idx
     cdrs=CDR(**pdbf.cdr_masks)
-    return Pose(xyz=pdbf.xyz, seq=pdbf.seq, atom_mask=pdbf.atom_mask, cdrs=cdrs, idx=idx, chain_dict=chain_dict)
+    hotspots=pdbf.get('hotspots', None)
+    return Pose(xyz=pdbf.xyz, seq=pdbf.seq, atom_mask=pdbf.atom_mask, cdrs=cdrs, idx=idx, chain_dict=chain_dict, hotspots=hotspots)
 
 def pose_from_RF_output(output: dict, input_pose: Pose) -> Pose:
     """
     Builds a pose from the output of the RF
     """
-    return Pose(xyz=output['xyz_prev'][0], seq=input_pose.seq, atom_mask=input_pose.atom_mask, cdrs=input_pose.cdrs, idx=input_pose.idx, chain_dict=input_pose.chain_dict)
+    return Pose(xyz=output['xyz_prev'][0], seq=input_pose.seq, atom_mask=input_pose.atom_mask, cdrs=input_pose.cdrs, idx=input_pose.idx, chain_dict=input_pose.chain_dict, hotspots=input_pose.hotspots)
 
 def masks_from_pdb_idx(pdb_idx: list) -> dict[str, torch.Tensor]:
     """
@@ -403,9 +404,13 @@ def pose_generator(conf: HydraConfig) -> tuple[Pose, str]:
         tag associated with the Pose
     """
     if sum(1 for value in conf.input.values() if value is not None) != 1:
-        raise ValueError("Must provide exactly one of quiver, remarked_pdb, or pdb_dir")
-    
-    if conf.input.quiver is not None:
+        raise ValueError("Must provide exactly one of quiver, remarked_pdb, pdb_dir, or json")
+
+    if conf.input.json is not None:
+        for pdbf, tag in parsers.parse_json(conf.input.json):
+            yield parsed_to_pose(pdbf), tag
+
+    elif conf.input.quiver is not None:
         quiver=Quiver(conf.input.quiver, mode='r')
         tags=quiver.get_tags()
 

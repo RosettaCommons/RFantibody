@@ -2,6 +2,7 @@ input:
   pdb: null
   pdb_dir: null
   quiver: null
+  json: null
 
 output:
   pdb_dir: null

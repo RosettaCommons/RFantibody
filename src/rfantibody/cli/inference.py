@@ -306,6 +306,8 @@ def proteinmpnn(
               help='Input directory containing PDB files')
 @click.option('--input-quiver', '-q', type=click.Path(exists=True, path_type=Path), default=None,
               help='Input Quiver file')
+@click.option('--input-json', '-j', type=click.Path(exists=True, path_type=Path), default=None,
+              help='Input JSON file with antibody sequences and target structure')
 @click.option('--output-dir', '-o', type=click.Path(path_type=Path), default=None,
               help='Output directory for PDB files')
 @click.option('--output-quiver', type=click.Path(path_type=Path), default=None,
@@ -326,6 +328,7 @@ def rf2(
     input_pdb: Optional[Path],
     input_dir: Optional[Path],
     input_quiver: Optional[Path],
+    input_json: Optional[Path],
     output_dir: Optional[Path],
     output_quiver: Optional[Path],
     num_recycles: int,
@@ -338,7 +341,7 @@ def rf2(
     """Run RF2 antibody structure prediction.
 
     Predicts/refines antibody structures using RoseTTAFold2.
-    Input can be a single PDB, a directory of PDBs, or a Quiver file.
+    Input can be a single PDB, a directory of PDBs, a Quiver file, or a JSON file.
 
     \b
     Examples:
@@ -354,13 +357,17 @@ def rf2(
         rf2 -q designs.qv --output-quiver predictions.qv
 
     \b
+        # Predict from JSON (sequence + target structure)
+        rf2 -j targets.json -o predictions/
+
+    \b
         # Predict with higher hotspot visibility
         rf2 -p antibody.pdb -o predictions/ --hotspot-show-prop 0.5
     """
     # Validate input
-    inputs_provided = sum([input_pdb is not None, input_dir is not None, input_quiver is not None])
+    inputs_provided = sum([input_pdb is not None, input_dir is not None, input_quiver is not None, input_json is not None])
     if inputs_provided == 0:
-        click.echo('Error: Must specify one of --input-pdb, --input-dir, or --input-quiver', err=True)
+        click.echo('Error: Must specify one of --input-pdb, --input-dir, --input-quiver, or --input-json', err=True)
         sys.exit(1)
     if inputs_provided > 1:
         click.echo('Error: Can only specify one input type', err=True)
@@ -375,6 +382,7 @@ def rf2(
     input_pdb = _resolve_path(input_pdb)
     input_dir = _resolve_path(input_dir)
     input_quiver = _resolve_path(input_quiver)
+    input_json = _resolve_path(input_json)
     output_dir = _resolve_path(output_dir)
     output_quiver = _resolve_path(output_quiver)
     weights = _resolve_path(weights)
@@ -395,6 +403,8 @@ def rf2(
         cmd.append(f'input.pdb_dir={input_dir}')
     elif input_quiver:
         cmd.append(f'input.quiver={input_quiver}')
+    elif input_json:
+        cmd.append(f'input.json={input_json}')
 
     # Output
     if output_dir:
@@ -408,13 +418,13 @@ def rf2(
     cmd.append(f'inference.cautious={cautious}')
     cmd.append(f'inference.hotspot_show_proportion={hotspot_show_prop}')
 
-    # Model weights
+    # Model weights (quote path for Hydra in case filename contains special chars)
     if weights:
-        cmd.append(f'model.model_weights={weights}')
+        cmd.append(f"model.model_weights='{weights}'")
     else:
         default_weights = PathConfig.get_weight_path('rf2')
         if default_weights.exists():
-            cmd.append(f'model.model_weights={default_weights}')
+            cmd.append(f"model.model_weights='{default_weights}'")
 
     # Seed for reproducibility
     if seed is not None:
@@ -424,7 +434,7 @@ def rf2(
     for override in extra:
         cmd.append(override)
 
-    input_source = input_pdb or input_dir or input_quiver
+    input_source = input_pdb or input_dir or input_quiver or input_json
     click.echo(f'Running RF2 structure prediction...')
     click.echo(f'Input: {input_source}')
     click.echo(f'Recycles: {num_recycles}')

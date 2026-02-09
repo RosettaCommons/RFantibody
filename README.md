@@ -574,6 +574,20 @@ rf2 -q sequences.qv --output-quiver predictions.qv -r 10
 rf2 -p design.pdb -o predictions/
 ```
 
+### JSON Input
+
+RF2 also accepts JSON files containing antibody sequences and target structures. This is useful when you have antibody sequences (without coordinates) and a known target structure. Each entry in the JSON contains heavy/light chain sequences and the target's 3D coordinates:
+
+```bash
+rf2 -j targets.json -o predictions/
+```
+
+The JSON file should be a dictionary keyed by sample ID, where each entry has:
+- `Hseq`: Heavy chain amino acid sequence (one-letter codes)
+- `Lseq`: Light chain amino acid sequence (one-letter codes)
+- `hotspots`: Boolean array marking target interface residues (length = target length)
+- `T`: Target structure dict with `seq` (integer-encoded), `xyz` (Lx27x3 coordinates), `mask` (Lx27 atom mask), `idx`, `pdb_idx`, and `cdr_bool`
+
 Run `rf2 --help` to see all available options.
 
 # Practical Considerations for Antibody Design
