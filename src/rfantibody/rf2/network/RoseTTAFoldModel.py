@@ -3,6 +3,7 @@ import torch.nn as nn
 from torch import einsum
 
 from rfantibody.rf2.network.AuxiliaryPredictor import (
+    BinderNetwork,
     DistanceNetwork,
     ExpResolvedNetwork,
     LDDTNetwork,
@@ -37,8 +38,10 @@ class RoseTTAFoldModule(nn.Module):
         d_t2d=44,
         SE3_param_full={'l0_in_features':32, 'l0_out_features':16, 'num_edge_features':32},
         SE3_param_topk={'l0_in_features':32, 'l0_out_features':16, 'num_edge_features':32},
+        new_pbind=False,
     ):
         super(RoseTTAFoldModule, self).__init__()
+        self.new_pbind = new_pbind
         #
         # Input Embeddings
         d_state = SE3_param_topk['l0_out_features']
@@ -67,8 +70,10 @@ class RoseTTAFoldModule(nn.Module):
        
         self.exp_pred = ExpResolvedNetwork(d_msa, d_state)
         self.pae_pred = PAENetwork(d_pair)
-        #self.bind_pred = BinderNetwork() #fd - expose n_hidden as variable?
-        self.bind_pred = v2_BinderNetwork(d_pair=d_pair, d_state=d_state)
+        if self.new_pbind:
+            self.bind_pred = v2_BinderNetwork(d_pair=d_pair, d_state=d_state)
+        else:
+            self.bind_pred = BinderNetwork()
 
     #@profile
     def forward(self, msa_latent=None, msa_full=None, seq=None, xyz_prev=None, idx=None,
@@ -161,10 +166,13 @@ class RoseTTAFoldModule(nn.Module):
         logits_pae = self.pae_pred(pair)
 
         # predict bind/no-bind
-        rbf_feat = rbf(
-            torch.cdist(xyzlast[:,:,1,:], xyzlast[:,:,1,:]) # [B, L, L]
-        ) # [B, L, L, 64]
-        p_bind = self.bind_pred(pair, rbf_feat, state, same_chain)
+        if self.new_pbind:
+            rbf_feat = rbf(
+                torch.cdist(xyzlast[:,:,1,:], xyzlast[:,:,1,:])
+            )
+            p_bind = self.bind_pred(pair, rbf_feat, state, same_chain)
+        else:
+            p_bind = self.bind_pred(logits_pae, same_chain)
 
         # Predict LDDT
         lddt = self.lddt_pred(state)

@@ -233,7 +233,15 @@ class Predictor():
             print(f"ERROR: model weights {model_weights} not found")
             return False
         checkpoint = torch.load(model_weights, map_location=self.device)
-        self.model.load_state_dict(checkpoint['model_state_dict'],strict=True)
+
+        # Auto-detect binder network version from checkpoint keys
+        has_v2 = 'bind_pred.rbf2attn.weight' in checkpoint['model_state_dict']
+        if has_v2 != self.model.new_pbind:
+            # Rebuild model with correct binder network
+            self.model_param['new_pbind'] = has_v2
+            self.model = RoseTTAFoldModule(**self.model_param).to(self.device)
+
+        self.model.load_state_dict(checkpoint['model_state_dict'], strict=True)
 
         return True
 

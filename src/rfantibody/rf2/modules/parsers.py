@@ -1,7 +1,12 @@
+import json
+
 import torch
 
 from rfantibody.rf2.modules.util import Dotdict
 from rfantibody.rf2.network.chemical import INIT_CRDS, aa2long, aa2num
+
+# One-letter amino acid codes to integer indices (matches num2aa ordering)
+_aa1to_num = {aa: i for i, aa in enumerate('ARNDCQEGHILKMFPSTWYV')}
 
 split_remark = lambda line: (line.split()[3][0], int(line.split()[2]))
 
@@ -108,6 +113,74 @@ def fix_any_duplicates(pdb: Dotdict) -> None:
     pdb['xyz'] = pdb['xyz'][mask]
     pdb['idx'] = pdb['idx'][mask]
     pdb['cdr_masks'] = {k:v[mask] for k,v in pdb['cdr_masks'].items()}
+
+def parse_json(json_path: str) -> list[tuple[Dotdict, str]]:
+    """
+    Parse a JSON file containing antibody-target entries.
+    Each entry has: Hseq, Lseq, hotspots, T (with seq, xyz, mask, idx, pdb_idx, cdr_bool).
+    H and L chains are sequence-only (no coordinates). T has full structural data.
+
+    Inputs:
+        json_path: path to JSON file
+    Outputs:
+        list of (Dotdict, tag) tuples in the same format as parse_HLT_lines output
+    """
+    with open(json_path) as f:
+        data = json.load(f)
+    return [(_parse_json_entry(entry), tag) for tag, entry in data.items()]
+
+
+def _parse_json_entry(entry: dict) -> Dotdict:
+    """
+    Convert a single JSON entry to the Dotdict format expected by parsed_to_pose.
+    Chains are assembled in T-H-L order (target first).
+    """
+    T_data = entry['T']
+    T_len = len(T_data['seq'])
+
+    # Target chain (has full coordinates)
+    T_seq = torch.tensor(T_data['seq'], dtype=torch.long)
+    T_xyz = torch.tensor(T_data['xyz'], dtype=torch.float32)
+    T_mask = torch.tensor(T_data['mask'], dtype=torch.bool)
+    T_idx = torch.tensor(T_data['idx'], dtype=torch.int64)
+    T_pdb_idx = [('T', i) for i in range(1, T_len + 1)]
+
+    # Assemble in T-H-L order
+    parts_seq, parts_xyz, parts_mask, parts_idx = [T_seq], [T_xyz], [T_mask], [T_idx]
+    parts_pdb_idx = list(T_pdb_idx)
+
+    for chain_key, chain_letter in [('Hseq', 'H'), ('Lseq', 'L')]:
+        seq_str = entry.get(chain_key)
+        if seq_str:
+            clen = len(seq_str)
+            parts_seq.append(torch.tensor([_aa1to_num.get(aa, 20) for aa in seq_str], dtype=torch.long))
+            parts_xyz.append(torch.full((clen, 27, 3), float('nan'), dtype=torch.float32))
+            parts_mask.append(torch.zeros((clen, 27), dtype=torch.bool))
+            parts_idx.append(torch.arange(1, clen + 1, dtype=torch.int64))
+            parts_pdb_idx.extend([(chain_letter, i) for i in range(1, clen + 1)])
+
+    total_len = sum(s.shape[0] for s in parts_seq)
+
+    # CDR masks - empty for sequence-only input (no REMARK annotations available)
+    cdr_names = ['H1', 'H2', 'H3', 'L1', 'L2', 'L3']
+    cdr_masks = {loop: torch.zeros(total_len, dtype=torch.bool) for loop in cdr_names}
+
+    # Hotspots - only on target, padded to full length
+    hotspots = torch.zeros(total_len, dtype=torch.bool)
+    for i, h in enumerate(entry.get('hotspots', [])):
+        if h is True or h == 'True':
+            hotspots[i] = True
+
+    return Dotdict({
+        'xyz': torch.cat(parts_xyz, dim=0),
+        'atom_mask': torch.cat(parts_mask, dim=0),
+        'idx': torch.cat(parts_idx, dim=0),
+        'seq': torch.cat(parts_seq, dim=0),
+        'pdb_idx': parts_pdb_idx,
+        'cdr_masks': cdr_masks,
+        'hotspots': hotspots,
+    })
+
 
 def reorder_chains_to_THL(pdb: Dotdict) -> None:
     """

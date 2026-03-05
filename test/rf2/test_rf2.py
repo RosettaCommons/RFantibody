@@ -27,6 +27,12 @@ SCRIPT_CONFIGS = {
         "output_files": [
             "ab_proteinmpnn_output_best.pdb"
         ]
+    },
+    "json_prediction.sh": {
+        "description": "Predict antibody structures from JSON input with old weights",
+        "output_files": [
+            "T00000_A0201_YLQPRTFLL_0_best.pdb"
+        ]
     }
 }
 

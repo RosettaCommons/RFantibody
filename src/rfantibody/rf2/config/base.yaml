@@ -2,6 +2,7 @@ input:
   pdb: null
   pdb_dir: null
   quiver: null
+  json: null
 
 output:
   pdb_dir: null
@@ -17,6 +18,7 @@ model:
   model_weights: /home/weights/RF2_ab.pt
 
 model_param:
+  new_pbind: True
   n_extra_block: 4
   n_main_block: 36
   d_msa: 256
