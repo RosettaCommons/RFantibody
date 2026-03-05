@@ -588,6 +588,18 @@ The JSON file should be a dictionary keyed by sample ID, where each entry has:
 - `hotspots`: Boolean array marking target interface residues (length = target length)
 - `T`: Target structure dict with `seq` (integer-encoded), `xyz` (Lx27x3 coordinates), `mask` (Lx27 atom mask), `idx`, `pdb_idx`, and `cdr_bool`
 
+### TCR-MHC Prediction
+
+For TCR structure prediction against MHC-peptide targets, use the JSON input format with the TCR-specific weights:
+
+```bash
+rf2 -j tcr_targets.json -o predictions/ \
+    --weights weights/RFab_noframework-nosidechains-5-10-23_trainingparamsadded.pt \
+    --hotspot-show-prop 0
+```
+
+The TCR weights (`RFab_noframework-nosidechains-5-10-23_trainingparamsadded.pt`) are downloaded automatically by `include/download_weights.sh` and use the older BinderNetwork architecture, which is auto-detected at load time.
+
 Run `rf2 --help` to see all available options.
 
 # Practical Considerations for Antibody Design

@@ -19,7 +19,7 @@ export TORCH_USE_CUDA_DSA=0
 uv run rf2 \
     --input-json "$TEST_DIR/inputs_for_test/rfab_targets.json" \
     --output-dir "$OUTPUT_DIR" \
-    --weights "$PROJECT_DIR/weights/RFab_noframework-nosidechains-5-10-23_trainingparamsadded.pt?download=1" \
+    --weights "$PROJECT_DIR/weights/RFab_noframework-nosidechains-5-10-23_trainingparamsadded.pt" \
     --num-recycles 10 \
     --no-cautious \
     --seed 42 \

@@ -18,6 +18,9 @@ if [ ! -d "${currdir}/../weights" ]; then
     echo "Downloading RF2 weights..." &&
     wget https://files.ipd.uw.edu/pub/RFantibody/RF2_ab.pt &&
 
+    echo "Downloading RF2 TCR weights..." &&
+    wget -O RFab_noframework-nosidechains-5-10-23_trainingparamsadded.pt https://zenodo.org/records/17488258/files/RFab_noframework-nosidechains-5-10-23_trainingparamsadded.pt?download=1 &&
+
     echo "All weights downloaded successfully!"
 else
     echo "Weights directory already exists! Skipping download."
