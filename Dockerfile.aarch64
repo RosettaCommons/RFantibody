@@ -1,0 +1,33 @@
+FROM nvcr.io/nvidia/dgl:24.03-py3
+
+WORKDIR /opt/rfantibody
+
+# Copy RFantibody source
+COPY . /opt/rfantibody/
+
+# Patch pyproject.toml: remove deps already provided by the NGC container
+# - DGL: provided by the container
+# - torch/torchaudio/torchvision: provided by the container
+# - cuda-python 11.8: container has CUDA 12
+RUN sed -i '/^dgl =/d' pyproject.toml && \
+    sed -i '/cuda-python/d' pyproject.toml && \
+    sed -i '/^torch =/d' pyproject.toml && \
+    sed -i '/^torchaudio/d' pyproject.toml && \
+    sed -i '/^torchvision/d' pyproject.toml
+
+# Install remaining RFantibody Python dependencies
+RUN pip install --no-cache-dir \
+    hydra-core \
+    icecream \
+    opt-einsum \
+    e3nn \
+    pyrsistent \
+    torch-utils \
+    "numpy<2" \
+    "biotite==0.41.2"
+
+# Install rfantibody as a package
+RUN pip install --no-cache-dir --no-deps -e .
+
+# Add SE3Transformer to path
+ENV PYTHONPATH="/opt/rfantibody/src:/opt/rfantibody/include/SE3Transformer:${PYTHONPATH}"
