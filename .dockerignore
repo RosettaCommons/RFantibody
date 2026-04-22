@@ -1,0 +1,38 @@
+# Keep the build context small. Anything matched here is NOT shipped to
+# the docker daemon during `docker build`. Bind mounts at `docker run`
+# time still see the host's real files.
+
+.git
+.github
+
+# Host-side python state — the container creates its own venv in /opt/venv
+.venv
+__pycache__
+*.pyc
+*.egg-info
+build
+dist
+
+# Model weights — bind-mount these in at runtime, don't bake them into the image
+weights
+*.pt
+*.pkl
+
+# Test outputs / scratch
+example_outputs
+example_outputs_*
+outputs
+scratch
+test_report.txt
+*_report.txt
+
+# IDE / OS noise
+.idea
+.vscode
+.DS_Store
+
+# Singularity image (large, not relevant to docker build)
+*.sif
+
+# DGL wheel cache
+include/dgl/*.whl

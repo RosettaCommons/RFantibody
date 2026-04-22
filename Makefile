@@ -25,9 +25,15 @@ SHELL       := /bin/bash
 
 # ---- paths (override on CLI) ----
 RFA_ROOT        := $(CURDIR)
-VENV_PY         := $(RFA_ROOT)/.venv/bin/python
+# Inside the docker image we ship UV_PROJECT_ENVIRONMENT=/opt/venv so the
+# venv lives off the bind mount. On the host it lives in $RFA_ROOT/.venv.
+# Auto-detect: prefer /opt/venv (container) if present, else host .venv.
+VENV_PY         := $(shell if [ -x /opt/venv/bin/python ]; then echo /opt/venv/bin/python; else echo $(RFA_ROOT)/.venv/bin/python; fi)
 RFA_WEIGHTS_DIR := $(RFA_ROOT)/weights
 HELPER          := $(RFA_ROOT)/vanilla_rf2_helper.py
+
+# ---- docker ----
+DOCKER_IMAGE ?= rfantibody:local
 
 RF2_DIR         ?= $(HOME)/rf2-vanilla/RoseTTAFold2
 RF2_WEIGHTS     := $(RF2_DIR)/network/weights/RF2_jan24.pt
@@ -48,7 +54,8 @@ PRED_PDB  := $(OUT_DIR)/$(NAME)_00_pred.pdb
         clone-rf2-vanilla download-rf2-vanilla-weights \
         download-rfantibody-weights \
         verify verify-rf2-vanilla test \
-        demo msa predict rmsd clean distclean
+        demo msa predict rmsd clean distclean \
+        docker-build docker-run docker-test
 
 # ===========================================================
 # help
@@ -221,3 +228,23 @@ clean:
 distclean: clean
 	@rm -rf "$(RF2_DIR)"
 	@echo "removed $(RF2_DIR)"
+
+# ===========================================================
+# docker
+# ===========================================================
+docker-build:
+	@echo "=== docker build -t $(DOCKER_IMAGE) ==="
+	docker build -t $(DOCKER_IMAGE) .
+
+docker-run: docker-build
+	@echo "=== docker run -it $(DOCKER_IMAGE) (bind mounting $(RFA_ROOT)) ==="
+	docker run --rm --gpus all -v "$(RFA_ROOT)":/home -it $(DOCKER_IMAGE)
+
+# Reproducibility hammer: build image, sync deps inside, run the test
+# suite. `uv sync` is invoked here (not in the Dockerfile) so it can read
+# pyproject.toml from the bind mount instead of needing it baked into the
+# image at build time.
+docker-test: docker-build
+	@echo "=== docker test: build + uv sync + make test (inside container) ==="
+	docker run --rm --gpus all -v "$(RFA_ROOT)":/home $(DOCKER_IMAGE) \
+	  bash -lc "cd /home && uv sync --all-extras && make test"
