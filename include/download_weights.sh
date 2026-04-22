@@ -5,8 +5,8 @@ currdir=$(cd `dirname $0` && pwd) &&
 
 # make a weights directory one level up from the current directory
 if [ ! -d "${currdir}/../weights" ]; then
-    mkdir -p ${currdir}/../weights &&
-    cd ${currdir}/../weights &&
+    mkdir -p "${currdir}/../weights" &&
+    cd "${currdir}/../weights" &&
 
     # download the weights
     echo "Downloading RFdiffusion weights..." &&
