@@ -55,7 +55,8 @@ PRED_PDB  := $(OUT_DIR)/$(NAME)_00_pred.pdb
         download-rfantibody-weights \
         verify verify-rf2-vanilla test \
         demo msa predict rmsd clean distclean \
-        docker-build docker-run docker-test
+        docker-build docker-run docker-test \
+        compare-rf2-vs-rfab diff-rf2-checkpoints
 
 # ===========================================================
 # help
@@ -78,6 +79,10 @@ help:
 	@echo "  make msa                      ColabFold MSA for \$$NAME / \$$SEQ"
 	@echo "  make predict                  run vanilla RF2 on the MSA"
 	@echo "  make rmsd                     Ca RMSD of prediction vs \$$REF_PDB"
+	@echo
+	@echo "RF2_ab vs vanilla RF2 tutorial (see rf2-vs-rfab-tutorial.md):"
+	@echo "  make diff-rf2-checkpoints     Case 1: state-dict diff"
+	@echo "  make compare-rf2-vs-rfab      Case 3: run both models + compare (~5 min)"
 	@echo
 	@echo "Cleanup:"
 	@echo "  make clean                    remove outputs for \$$NAME"
@@ -228,6 +233,23 @@ clean:
 distclean: clean
 	@rm -rf "$(RF2_DIR)"
 	@echo "removed $(RF2_DIR)"
+
+# ===========================================================
+# rf2-vs-rfab tutorial (see rf2-vs-rfab-tutorial.md)
+# ===========================================================
+
+# Case 1 reproducer: state-dict diff of the two RF2 checkpoints.
+# Prints 3 shape mismatches on templ_emb.* layers and the verdict.
+diff-rf2-checkpoints: download-rfantibody-weights download-rf2-vanilla-weights
+	@echo "=== diffing RF2_ab vs RF2_jan24 ==="
+	@"$(VENV_PY)" "$(RFA_ROOT)/scripts/diff_rf2_checkpoints.py" \
+	    "$(RFA_WEIGHTS_DIR)/RF2_ab.pt" \
+	    "$(RF2_WEIGHTS)"
+
+# Case 3 reproducer: run both RF2s on the same antibody-antigen input
+# and print a Cα-RMSD + pLDDT comparison. Idempotent; ~5 min cold start.
+compare-rf2-vs-rfab: _ensure_venv download-rfantibody-weights download-rf2-vanilla-weights
+	@bash "$(RFA_ROOT)/scripts/run_rf2_comparison.sh"
 
 # ===========================================================
 # docker
