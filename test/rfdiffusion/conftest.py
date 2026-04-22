@@ -24,18 +24,25 @@ _test_paths = PathConfig.get_test_paths('rfdiffusion')
 def check_gpu():
     """Check if CUDA is available and we're on a supported GPU"""
     if not torch.cuda.is_available():
-        pytest.skip("No GPU found, tests require a supported GPU (A4000 or H100)")
+        pytest.skip("No CUDA GPU found; RFantibody inference tests need a GPU")
 
     gpu_info = torch.cuda.get_device_properties(0)
-    if 'A4000' not in gpu_info.name and 'H100' not in gpu_info.name:
-        pytest.skip("Tests require a supported GPU (A4000 or H100)")
+    is_supported = 'A4000' in gpu_info.name or 'H100' in gpu_info.name
 
-    # Log which GPU and reference data we're using
+    if os.environ.get('RFA_STRICT_GPU') == '1' and not is_supported:
+        pytest.skip(
+            "RFA_STRICT_GPU=1 set and GPU is not A4000/H100; skipping. "
+            "Unset to run pipelines without reference comparisons."
+        )
+
     print(f"Running tests on {gpu_info.name} GPU")
     if 'A4000' in gpu_info.name:
         print("Using A4000-specific reference outputs")
     elif 'H100' in gpu_info.name:
         print("Using H100-specific reference outputs")
+    else:
+        print(f"No reference outputs for {gpu_info.name}; "
+              "tests will execute pipelines and skip reference-file comparisons")
 
 
 @pytest.fixture(scope="session")
