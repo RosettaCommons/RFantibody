@@ -1,4 +1,4 @@
-.*
+
 !.gitignore
 build
 rfantibody.egg-info
@@ -17,3 +17,5 @@ dgl-2.4.0+cu118-cp310-cp310-manylinux1_x86_64.*
 dist
 *.sif
 scratch
+.DS_Store
+.devcontainer
