@@ -1,6 +1,7 @@
 # script for diffusion protocols 
 import logging
 import os
+from pathlib import Path
 import pickle
 import time
 from typing import List
@@ -49,8 +50,10 @@ def get_chi_betaT(max_timestep=100, beta_0=0.01, abar_T=1e-3, method='cosine'):
     Function to precalculate beta_T for chi angles (decoded at different time steps, so T in beta_T varies).
     Calculated empirically
     """
+    cache_dir=os.path.join(Path.home(), '.rfantibody', 'cached_schedules')
+    name = f'T{max_timestep}_beta_0{beta_0}_abar_T{abar_T}_method_{method}.pkl'
+    name=os.path.join(cache_dir, name)
 
-    name = f'./cached_schedules/T{max_timestep}_beta_0{beta_0}_abar_T{abar_T}_method_{method}.pkl'
 
     if not os.path.exists(name):
         print('Calculating chi_beta_T dictionary...')
@@ -72,8 +75,8 @@ def get_chi_betaT(max_timestep=100, beta_0=0.01, abar_T=1e-3, method='cosine'):
             beta_Ts[timestep] = idx.item()
 
         # save cached schedule
-        if not os.path.isdir('./cached_schedules/'):
-            os.makedirs('./cached_schedules/', exist_ok=True)
+        if not os.path.isdir(cache_dir):
+            os.makedirs(cache_dir, exist_ok=True)
         with open(name, 'wb') as fp:
             pickle.dump(beta_Ts, fp)
 
@@ -880,7 +883,7 @@ class Diffuser():
                  schedule_kwargs={},
                  chi_kwargs={},
                  var_scale=1.0,
-                 cache_dir='.',
+                 cache_dir=os.path.join(Path.home(), '.rfantibody', 'cached_schedules'),
                  partial_T=None,
                  truncation_level=2000
                  ):
