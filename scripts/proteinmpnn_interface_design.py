@@ -2,6 +2,7 @@ import argparse
 import os
 import random
 import sys
+import tempfile
 import time
 
 import numpy as np
@@ -106,13 +107,12 @@ class ProteinMPNN_runner():
     def sequence_optimize(self, sample_feats: SampleFeatures) -> list[tuple[str, float]]:
         t0 = time.time()
 
-        # Once we have figured out pose I/O without Rosetta this will be easy to swap in
-        pdbfile = 'temp.pdb'
-        sample_feats.pose.dump_pdb(pdbfile)
-
-        feature_dict = mpnn_util.generate_seqopt_features(pdbfile, sample_feats.chains)
-
-        os.remove(pdbfile)
+        # Keep feature extraction isolated: this script may be launched concurrently
+        # by multiple workers sharing the same RFantibody installation.
+        with tempfile.TemporaryDirectory(prefix='rfantibody_mpnn_') as temp_dir:
+            pdbfile = os.path.join(temp_dir, 'input.pdb')
+            sample_feats.pose.dump_pdb(pdbfile)
+            feature_dict = mpnn_util.generate_seqopt_features(pdbfile, sample_feats.chains)
 
         arg_dict = mpnn_util.set_default_args(self.seqs_per_struct, omit_AAs=self.omit_AAs, allow_x=self.allow_x)
         arg_dict['temperature'] = self.temperature
@@ -120,7 +120,7 @@ class ProteinMPNN_runner():
         masked_chains = sample_feats.chains[:-1]
         visible_chains = [sample_feats.chains[-1]]
 
-        fixed_positions_dict = {pdbfile[:-len('.pdb')]: sample_feats.fixed_res}
+        fixed_positions_dict = {feature_dict['name']: sample_feats.fixed_res}
 
         sequences = mpnn_util.generate_sequences(
             self.mpnn_model,
@@ -200,6 +200,5 @@ for pdb in struct_manager.iterate():
     # We are done with one pdb, record that we finished
     struct_manager.record_checkpoint(pdb)
     
-
 
 
