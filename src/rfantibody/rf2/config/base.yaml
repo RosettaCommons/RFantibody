@@ -54,3 +54,9 @@ model_param:
     div: 4
     n_heads: 4
 
+hydra:
+  run:
+    dir: ${oc.env:HOME}/.rfantibody/outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  sweep:
+    dir: ${oc.env:HOME}/.rfantibody/multirun/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    subdir: ${hydra.job.num}

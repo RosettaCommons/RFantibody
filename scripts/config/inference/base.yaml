@@ -168,3 +168,10 @@ scaffoldguided:
   target_ss: null
   target_adj: null
   mask_loops: True
+
+hydra:
+  run:
+    dir: ${oc.env:HOME}/.rfantibody/outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  sweep:
+    dir: ${oc.env:HOME}/.rfantibody/multirun/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    subdir: ${hydra.job.num}
