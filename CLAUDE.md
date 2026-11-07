@@ -31,6 +31,11 @@
 - The test framework automatically detects GPU type and uses appropriate reference files
 
 ## Development Log
+### 2026-10-22
+- Updated certifi in uv.lock to 2026.10.19 (emSign CA certificate incident); entry edited directly because `uv lock` could not reach download.pytorch.org
+- Docs workflow now upgrades pip to >=26.2.2 before installing documentation dependencies
+- README notes the uv >=0.13.4 requirement and `uv self update`
+
 ### 2026-01-27
 - Replaced USalign-based structural alignment with biotite's Kabsch superposition for RMSD calculations
 - Simplified RMSD calculation workflow: now uses direct Cα superposition for same-length sequences

@@ -68,6 +68,9 @@ RFantibody uses [uv](https://docs.astral.sh/uv/) for fast, reliable dependency m
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
+> **Note:** RFantibody requires uv 0.13.4 or newer; older versions still trust the withdrawn emSign root CA
+> certificate. If uv is already installed, check with `uv --version` and update with `uv self update`.
+
 After installation, restart your terminal or run:
 ```bash
 source ~/.bashrc  # or ~/.zshrc if using zsh
