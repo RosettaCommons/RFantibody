@@ -51,7 +51,7 @@ rf2 = "rfantibody.cli.inference:rf2"
 torch = { index = "pytorch" }
 torchaudio = { index = "pytorch" }
 torchvision = { index = "pytorch" }
-dgl = { url = "https://data.dgl.ai/wheels/torch-2.3/cu118/dgl-2.4.0%2Bcu118-cp310-cp310-manylinux1_x86_64.whl" }
+dgl = { url = "https://github.com/RosettaCommons/RFantibody/releases/download/deps-dgl-2.4.0/dgl-2.4.0%2Bcu118-cp310-cp310-manylinux1_x86_64.whl" }
 
 [[tool.uv.index]]
 name = "pytorch"

@@ -156,7 +156,7 @@ wheels = [
 [[package]]
 name = "dgl"
 version = "2.4.0+cu118"
-source = { url = "https://data.dgl.ai/wheels/torch-2.3/cu118/dgl-2.4.0%2Bcu118-cp310-cp310-manylinux1_x86_64.whl" }
+source = { url = "https://github.com/RosettaCommons/RFantibody/releases/download/deps-dgl-2.4.0/dgl-2.4.0%2Bcu118-cp310-cp310-manylinux1_x86_64.whl" }
 dependencies = [
     { name = "networkx" },
     { name = "numpy" },
@@ -171,7 +171,7 @@ dependencies = [
     { name = "tqdm" },
 ]
 wheels = [
-    { url = "https://data.dgl.ai/wheels/torch-2.3/cu118/dgl-2.4.0%2Bcu118-cp310-cp310-manylinux1_x86_64.whl", hash = "sha256:534a79f64eff74a3556cd223f59160f9f77aefcd199be96642b16f24dc24d855" },
+    { url = "https://github.com/RosettaCommons/RFantibody/releases/download/deps-dgl-2.4.0/dgl-2.4.0%2Bcu118-cp310-cp310-manylinux1_x86_64.whl", hash = "sha256:3bcbbc6387ac67d5785353b3b067db49d131f5b455d385cfaa7f4b4a3a4d195d" },
 ]
 
 [package.metadata]
@@ -790,7 +790,7 @@ requires-dist = [
     { name = "biotite", specifier = ">=0.38.0" },
     { name = "click", specifier = ">=8.0.0" },
     { name = "cuda-python", specifier = "==11.8" },
-    { name = "dgl", url = "https://data.dgl.ai/wheels/torch-2.3/cu118/dgl-2.4.0%2Bcu118-cp310-cp310-manylinux1_x86_64.whl" },
+    { name = "dgl", url = "https://github.com/RosettaCommons/RFantibody/releases/download/deps-dgl-2.4.0/dgl-2.4.0%2Bcu118-cp310-cp310-manylinux1_x86_64.whl" },
     { name = "e3nn" },
     { name = "hydra-core" },
     { name = "icecream" },

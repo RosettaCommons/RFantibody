@@ -31,6 +31,11 @@
 - The test framework automatically detects GPU type and uses appropriate reference files
 
 ## Development Log
+### 2026-11-19
+- Fixed `uv sync` failure (issue #108): the dgl.ai domain expired, so the pinned DGL wheel URL was dead
+- Added scripts/util/build_dgl_wheel.py, which reproducibly rebuilds dgl-2.4.0+cu118 (torch 2.3, cp310) from the dglteam conda package on anaconda.org (sha256-verified)
+- DGL wheel is now hosted as a GitHub release asset (tag `deps-dgl-2.4.0`) and pinned by sha256 in uv.lock
+
 ### 2026-01-27
 - Replaced USalign-based structural alignment with biotite's Kabsch superposition for RMSD calculations
 - Simplified RMSD calculation workflow: now uses direct Cα superposition for same-length sequences
