@@ -96,7 +96,7 @@ This uses uv to:
 - Download Python 3.10 if not already installed
 - Create a virtual environment in `.venv/`
 - Install all dependencies including PyTorch with CUDA 11.8 support
-- Install [Deep Graph Library](https://www.dgl.ai) from CUDA-enabled wheels
+- Install [Deep Graph Library](https://github.com/dmlc/dgl) from a CUDA-enabled wheel hosted on the RFantibody GitHub releases page (the original dgl.ai wheel host is no longer available; see `scripts/util/build_dgl_wheel.py` for how this wheel is rebuilt from the DGL team's official conda package)
 
 ### 5. Activate the Environment
 
