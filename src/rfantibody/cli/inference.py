@@ -100,7 +100,7 @@ def rfdiffusion(
         sys.exit(1)
 
     # Build command
-    cmd = ['python', str(script_path), '--config-name', 'antibody']
+    cmd = [sys.executable, str(script_path), '--config-name', 'antibody']
 
     # Required parameters
     cmd.append(f'antibody.target_pdb={target}')
@@ -246,7 +246,7 @@ def proteinmpnn(
         sys.exit(1)
 
     # Build command
-    cmd = ['python', str(script_path)]
+    cmd = [sys.executable, str(script_path)]
 
     # Input
     if input_dir:
@@ -394,7 +394,7 @@ def rf2(
         sys.exit(1)
 
     # Build command
-    cmd = ['python', str(script_path)]
+    cmd = [sys.executable, str(script_path)]
 
     # Input
     if input_pdb:
