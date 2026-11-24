@@ -464,6 +464,17 @@ bash scripts/examples/nanobody_full_pipeline.sh
 
 The script outputs three Quiver files representing each stage, allowing you to inspect intermediate results or restart from any step.
 
+## Production Docker Image
+
+process described above is well suited for development.  However, if you are deploying the RFAntibody pipeline to a production environment, it is better to have a docker image with all dependencies pre-installed.  The `production.Dockerfile` Dockerfile accomplishes this. It builds an image with all dependencies installed.  The RFAntibody source and scripts are installed in `/opt/rfantibody`.
+
+### Building production Docker Image
+
+```
+docker build -t rfantibody-production -f production.Dockerfile .
+```
+
+
 # Usage
 
 > **Note:** The examples below assume you have the RFantibody environment active. Either activate it with `source .venv/bin/activate`, or prefix each command with `uv run` (e.g., `uv run rfdiffusion ...`).
