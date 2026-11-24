@@ -21,3 +21,10 @@ antibody:
   terminate_bad_targeting: null
   hotspot_termination_threshold: 10
   hotspot_termination_failures_permitted: 20
+
+hydra:
+  run:
+    dir: ${oc.env:HOME}/.rfantibody/outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  sweep:
+    dir: ${oc.env:HOME}/.rfantibody/multirun/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    subdir: ${hydra.job.num}
