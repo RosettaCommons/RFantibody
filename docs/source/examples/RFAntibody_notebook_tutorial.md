@@ -126,7 +126,7 @@ For this example, let's say that we know we want to work on trastuzumab but we d
 
 Start by finding the sequence for this antibody in the [KEGG drug database](https://www.genome.jp/kegg/drug/):
 
-```{figure} ./.assets/KEGG_search.png
+```{figure} ../.assets/KEGG_search.png
 :widtth: 100%
 
 KEGG Drug Database homepage with search for trastuzumab hilighted.
