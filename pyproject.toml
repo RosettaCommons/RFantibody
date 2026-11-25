@@ -80,3 +80,6 @@ ensure_newline_before_comments = true
 split_on_trailing_comma = true
 sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
 known_first_party = ["rfantibody"]
+
+[tool.uv]
+constraint-dependencies = [certifi>=2026.10.19]

@@ -14,8 +14,8 @@ release = '1.0.0'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ["myst_parser",
-              "sphinx_copybutton"
+extensions = ["myst_nb",  # also loads myst_parser and handles .md/.ipynb
+              "sphinx_copybutton",
               ]
 
 templates_path = ['_templates']
@@ -53,10 +53,19 @@ html_theme_options = {
         }
     }
 
+# .md and .ipynb suffixes are registered by myst_nb itself
 source_suffix = {
     ".rst": "restructuredtext",
-    ".md": "markdown",
     }
+
+# -- Notebook options (myst-nb) ----------------------------------------------
+# Never execute notebooks at build time: the example notebook needs a GPU,
+# model weights, and Google Colab. Readers run it via the "Open in Colab" badge.
+nb_execution_mode = "off"
+
+# Generate GitHub-style anchors for headings (levels 1-5) so in-page
+# links like [Setup](#setup) resolve, e.g. the tutorial table of contents.
+myst_heading_anchors = 5
 
 html_js_files = [
     ('https://scripts.simpleanalyticscdn.com/latest.js', {'async': 'async', 'defer': 'defer'}),

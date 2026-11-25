@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "docs/**"
+      - "examples/RFAntibody_v1.ipynb"
       - ".github/workflows/docs.yml"
   workflow_dispatch:
 
